@@ -2,23 +2,18 @@
 class BooksPage {
   constructor(page) {
     this.page = page;
-    // ปรับตามภาพหน้าจอจริงที่คุณส่งมา
-    this.addBtnHeader = page.getByRole('button', { name: 'Add New Book' });
-    this.isbnInput = page.locator('label:has-text("ISBN") + input, input[name*="isbn"]');
-    this.titleInput = page.locator('label:has-text("Title") + input, input[name*="title"]');
-    this.authorInput = page.locator('label:has-text("Author") + input, input[name*="author"]');
-    this.publisherInput = page.locator('label:has-text("Publisher") + input');
-    this.yearInput = page.locator('label:has-text("Publication Year") + input');
-    this.categoryInput = page.locator('label:has-text("Category") + input, select[name*="category"]');
-    this.copiesInput = page.locator('label:has-text("Total Copies") + input');
-    this.locationInput = page.locator('label:has-text("Shelf Location") + input');
+    // ใช้ Selector ที่รองรับทั้งภาษาไทยและอังกฤษ และคลาสปุ่มมาตรฐาน
+    this.addBtnHeader = page.locator('button, a').filter({ hasText: /Add New Book|เพิ่มหนังสือใหม่/i });
+    this.isbnInput = page.locator('input[name*="isbn"], #isbn');
+    this.titleInput = page.locator('input[name*="title"], #title');
+    this.authorInput = page.locator('input[name*="author"], #author');
+    this.publisherInput = page.locator('input[name*="publisher"]');
+    this.yearInput = page.locator('input[name*="year"]');
+    this.copiesInput = page.locator('input[name*="copies"], input[name*="qty"]');
+    this.submitBtn = page.locator('button[type="submit"]').filter({ hasText: /Add Book|Save|บันทึก/i });
     
-    // ปุ่มใน Modal
-    this.submitBtn = page.getByRole('button', { name: 'Add Book', exact: true });
-    
-    // ค้นหา
-    this.searchInput = page.locator('input[placeholder*="Search"]');
-    this.searchBtn = page.getByRole('button', { name: 'Search' });
+    this.searchInput = page.locator('input[name*="search"]');
+    this.searchBtn = page.locator('button').filter({ hasText: /Search|ค้นหา/i });
   }
 
   async goto() {
@@ -27,21 +22,16 @@ class BooksPage {
   }
 
   async fillFullBookInfo(data) {
-    await this.addBtnHeader.click();
-    // รอให้ Modal ปรากฏ
-    await this.isbnInput.waitFor({ state: 'visible' });
-    
-    await this.isbnInput.fill(data.isbn);
+    await this.addBtnHeader.first().click();
+    // รอให้ฟอร์มปรากฏขึ้นมาก่อนกรอกข้อมูล
+    await this.isbnInput.waitFor({ state: 'visible', timeout: 5000 });
+    await this.isbnInput.fill(String(data.isbn));
     await this.titleInput.fill(data.title);
     await this.authorInput.fill(data.author);
-    await this.publisherInput.fill(data.publisher || 'Test Publisher');
-    await this.yearInput.fill(data.year || '2024');
-    await this.categoryInput.fill(data.category || 'General');
-    await this.copiesInput.fill(data.copies.toString());
-    await this.locationInput.fill(data.location || 'A-101');
-    
-    await this.submitBtn.click();
+    if (await this.publisherInput.isVisible()) await this.publisherInput.fill('Test Pub');
+    // ใช้ String() เพื่อให้แน่ใจว่าจำนวนติดลบถูกส่งเป็น string
+    await this.copiesInput.fill(String(data.copies));
+    await this.submitBtn.first().click();
   }
 }
-
 module.exports = { BooksPage };
