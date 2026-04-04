@@ -1,0 +1,22 @@
+{
+  "name": "library-system-e2e-playwright",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NChanantorn/Library-System-E2E-Playwright.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NChanantorn/Library-System-E2E-Playwright/issues"
+  },
+  "homepage": "https://github.com/NChanantorn/Library-System-E2E-Playwright#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^25.5.2"
+  }
+}
