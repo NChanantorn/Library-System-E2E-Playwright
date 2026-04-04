@@ -1,6 +1,6 @@
 // tests/auth.spec.js
 const { test, expect } = require('@playwright/test');
-const { LoginPage } = require('../pages/LoginPage');
+const { LoginPage } = require('../../pages/LoginPage');
 
 test.describe('ระบบเข้าสู่ระบบ (Login System)', () => {
 
