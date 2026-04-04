@@ -12,102 +12,82 @@ test.describe('Reports Module (ตาม TestCase.csv)', () => {
     dashboardPage = new DashboardPage(page);
     reportsPage = new ReportsPage(page);
 
-    // Login before each test
     await loginPage.goto();
     await loginPage.login('admin', 'admin123');
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await expect(page).not.toHaveURL(/login/, { timeout: 10000 });
   });
 
+  // TC-REP-01: เปิดหน้า Reports
   test('TC-REP-01: เปิดหน้า Reports', async ({ page }) => {
-    // Navigate to Reports from Dashboard or directly
-    await dashboardPage.navigateToReports().catch(async () => {
-      // If navigation button not found, go directly
+    try {
+      await dashboardPage.navigateToReports();
+    } catch {
       await reportsPage.goto();
-    });
+    }
+    await page.waitForLoadState('networkidle', { timeout: 15000 });
 
-    // Verify page loaded successfully
-    const isLoaded = await reportsPage.checkPageLoaded();
-    expect(isLoaded).toBe(true);
+    await expect(page).not.toHaveURL(/login/);
+    await expect(page).toHaveURL(/reports\.php/, { timeout: 5000 });
 
-    // Verify Overdue Books section is displayed
-    const hasOverdueSection = await page.locator('table, [class*="overdue" i]').count();
-    expect(hasOverdueSection).toBeGreaterThan(0);
+    const header = page.locator('h1, h2, h3').first();
+    await expect(header).toBeVisible({ timeout: 5000 });
+    const headerText = await header.textContent();
+    expect(headerText.trim().length).toBeGreaterThan(0);
 
-    // Verify page header/title
-    const header = await reportsPage.getPageHeader();
-    expect(header).toBeTruthy();
+    await expect(reportsPage.overdueTable).toBeVisible({ timeout: 5000 });
   });
 
+  // TC-REP-02: แสดงรายการหนังสือเกินกำหนด
   test('TC-REP-02: แสดงรายการหนังสือเกินกำหนด', async ({ page }) => {
-    // Navigate to Reports
-    await dashboardPage.navigateToReports().catch(async () => {
-      await reportsPage.goto();
-    });
+    await reportsPage.goto();
 
-    // Wait for Overdue Books section to be visible
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
-    await page.waitForTimeout(1000);
+    await expect(reportsPage.overdueTable).toBeVisible({ timeout: 5000 });
 
-    // Verify table headers exist
-    const hasTableHeaders = await reportsPage.verifyOverdueBooksTableVisible();
-    expect(hasTableHeaders).toBe(true);
+    // ตรวจ column headers ครบ
+    await expect(reportsPage.memberHeader.first()).toBeVisible({ timeout: 5000 });
+    await expect(reportsPage.bookHeader.first()).toBeVisible({ timeout: 5000 });
+    await expect(reportsPage.daysOverdueHeader.first()).toBeVisible({ timeout: 5000 });
+    await expect(reportsPage.fineHeader.first()).toBeVisible({ timeout: 5000 });
 
-    // Verify table structure - check for required columns
-    const memberHeader = await page.locator('table th').filter({ hasText: /Member|สมาชิก|ชื่อ/i }).count();
-    const bookHeader = await page.locator('table th').filter({ hasText: /Book|หนังสือ|ชื่อหนังสือ/i }).count();
-    const daysHeader = await page.locator('table th').filter({ hasText: /Days Overdue|วันที่เกิน|จำนวนวัน/i }).count();
-    const fineHeader = await page.locator('table th').filter({ hasText: /Fine|ค่าปรับ/i }).count();
+    const rowCount = await reportsPage.getOverdueRecordsCount();
 
-    // At least Member and Book columns must exist
-    expect(memberHeader + bookHeader).toBeGreaterThan(0);
-
-    // If there's overdue data, verify it's displayed
-    const hasOverdueData = await reportsPage.verifyOverdueDataDisplayed().catch(() => false);
-    if (hasOverdueData) {
-      const recordCount = await reportsPage.getOverdueRecordsCount();
-      expect(recordCount).toBeGreaterThanOrEqual(0);
-
-      // If there are records, verify they have the required fields
-      if (recordCount > 0) {
-        const firstRecord = await reportsPage.getOverdueRecord(0);
-        expect(firstRecord).toBeTruthy();
-        // Member and Book should have some value
-        expect(firstRecord.member || firstRecord.book).toBeTruthy();
-      }
+    if (rowCount > 0) {
+      const firstRecord = await reportsPage.getOverdueRecord(0);
+      expect(firstRecord.member.length).toBeGreaterThan(0);
+      expect(firstRecord.book.length).toBeGreaterThan(0);
+    } else {
+      const emptyMsg = reportsPage.overdueTable.locator('td[colspan]');
+      await expect(emptyMsg.first()).toBeVisible({ timeout: 3000 });
     }
   });
 
-  test('TC-REP-03: ตรวจสอบการคำนวณค่าปรับ', async ({ page }) => {
-    // Navigate to Reports
-    await dashboardPage.navigateToReports().catch(async () => {
-      await reportsPage.goto();
-    });
+  // TC-REP-03: [BUG] ตรวจสอบการคำนวณค่าปรับ — Fine ผิด (ระบบคิด Days x 5 แทน Days x 10) (Fine = Days Overdue x 10)
+  test('TC-REP-03: [BUG] ตรวจสอบการคำนวณค่าปรับ — Fine ผิด (ระบบคิด Days x 5 แทน Days x 10)', async ({ page }) => {
+    await reportsPage.goto();
 
-    // Wait for page to load
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
-    await page.waitForTimeout(1000);
+    const rowCount = await reportsPage.getOverdueRecordsCount();
+    expect(rowCount).toBeGreaterThan(0);
 
-    // Get all overdue records and verify fine calculation
-    const fineVerificationResults = await reportsPage.verifyFineCalculation();
+    const results = await reportsPage.verifyFineCalculation();
+    const errors = [];
 
-    // If there are overdue records
-    if (fineVerificationResults && fineVerificationResults.length > 0) {
-      // Check that fine calculation formula is correct: Days Overdue x 10 = Fine
-      for (const result of fineVerificationResults) {
-        const { daysOverdue, fine } = result.record;
-        const days = parseInt(daysOverdue) || 0;
-        const expectedFine = days * 10;
-        const actualFine = parseInt(fine) || 0;
+    for (const result of results) {
+      const { record, isCorrect, expected, actual } = result;
+      const days = parseInt(record.daysOverdue.replace(/[^0-9]/g, ''), 10) || 0;
 
-        // Fine should equal Days Overdue x 10
-        if (days > 0) {
-          expect(actualFine).toBe(expectedFine);
-        }
+      if (days > 0 && !isCorrect) {
+        errors.push(
+          `"${record.book}": DaysOverdue=${days}, Fine=${actual}, Expected=${expected}`
+        );
+      }
+      if (days < 0) {
+        errors.push(`"${record.book}": DaysOverdue เป็นลบ (${days})`);
+      }
+      if (actual < 0) {
+        errors.push(`"${record.book}": Fine เป็นลบ (${actual})`);
       }
     }
 
-    // If no overdue records, verify the table is still properly displayed
-    const hasTable = await reportsPage.verifyOverdueBooksTableVisible();
-    expect(hasTable).toBe(true);
+    expect(errors, `พบการคำนวณค่าปรับผิด:\n${errors.join('\n')}`).toHaveLength(0);
   });
 });
