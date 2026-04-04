@@ -122,22 +122,71 @@ Feature: Authentication / Login Page - Security
 
 ---
 
+## BUG-004
+
+Bug ID: BUG-004  
+ชื่อ: Dashboard - จำนวน Available Books > Total Books (Logic Error)  
+Severity: High  
+Priority: High  
+TC-ID: TC-DASH-02  
+Feature: Dashboard / Statistics Display
+
+### ขั้นตอนการทำซ้ำ:
+
+1. Login เข้าระบบ ด้วย admin/admin123
+2. ไป Dashboard page
+3. ดูตัวเลขใน "Total Books" และ "Available" cards
+
+### คาดหวัง:
+
+- Total Books: X books
+- Available Books: <= X books (ต้องน้อยกว่าหรือเท่ากับ Total)
+- Borrowed Books: <= Total Books
+- Available + Borrowed = Total (หรือใกล้เคียง)
+- ตัวเลขทั้งหมดต้องสมเหตุสมผล และ logically consistent
+
+### จริง:
+
+- Total Books: **8**
+- Available: **21** ← ❌ มากกว่า Total!
+- Borrowed: 3
+- Active Members: 5
+
+**Logic Error:**
+
+```
+Available (21) > Total Books (8) ← ไม่สมเหตุสมผล!
+Available + Borrowed = 21 + 3 = 24 ≠ Total (8)
+```
+
+### Attachment:
+
+- BUG-004-dashboard-invalid-numbers.png
+- BUG-004-statistics-mismatch.png
+
+### Status:
+
+New (ยืนยันแล้ว)
+
+---
+
 ## บันทึก:
 
 **BUG-001:** PHP Warnings on wrong password - TC-AUTH-02  
 **BUG-002:** PHP Warnings on invalid username - TC-AUTH-03  
-**BUG-003:** 🔴 **SQL Injection Bypass Login** - TC-AUTH-06 (CRITICAL!)
+**BUG-003:** 🔴 SQL Injection Bypass Login - TC-AUTH-06  
+**BUG-004:** Dashboard Logic Error (Available > Total) - TC-DASH-02
 
 ---
 
 ## สถานะ
 
-**Total Bugs Found:** 3  
+**Total Bugs Found:** 4  
 **Target:** 20-30 bugs  
-**Remaining:** 17-27 bugs ต้องหา
+**Remaining:** 16-26 bugs ต้องหา
 
 **CRITICAL Bugs:** 1 (SQL Injection)  
-**HIGH Bugs:** 2 (PHP Errors)
+**HIGH Bugs:** 3 (PHP Errors x2, Dashboard Logic)
 
 ---
 
