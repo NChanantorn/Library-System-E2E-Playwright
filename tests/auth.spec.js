@@ -30,4 +30,16 @@ test.describe('ระบบเข้าสู่ระบบ (Login System)', ()
     await expect(page).toHaveURL(/login/);
   });
 
+  test('TC-03: [Security] ตรวจสอบช่องโหว่ SQL Injection ในหน้า Login', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    
+    // ใส่รหัส SQL Injection ยอดฮิต ' OR '1'='1
+    await loginPage.login("' OR '1'='1", "anything");
+    
+    // ความคาดหวัง: ระบบ "ต้องไม่ยอม" ให้เข้าสู่ระบบ (URL ต้องยังเป็นหน้า Login)
+    // แต่ถ้า BUG 5 ทำงาน: บอทจะหลุดเข้าไปหน้า Dashboard ได้ ซึ่งแปลว่าพัง!
+    await expect(page).toHaveURL(/login/); 
+  });
+
 });
