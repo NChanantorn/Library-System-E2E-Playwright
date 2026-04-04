@@ -190,8 +190,8 @@ Available + Borrowed = 21 + 3 = 24 ≠ Total (8)
 
 Bug ID: BUG-005  
 ชื่อ: Edit Book page ไม่พบ (404 Not Found)  
-Severity: **CRITICAL**  
-Priority: **CRITICAL**  
+Severity: Critical
+Priority: Critical  
 TC-ID: TC-BOOK-05  
 Feature: Books / Edit Book Functionality
 
@@ -199,8 +199,8 @@ Feature: Books / Edit Book Functionality
 
 1. Login เข้าระบบด้วย admin/admin123
 2. Go to Books page
-3. Click "Edit" button บนหนังสือ ID 9
-4. ระบบพยายาม redirect ไป book_edit.php?id=9
+3. Click "Edit" button
+4. ระบบพยายาม redirect ไป book_edit.php
 
 ### คาดหวัง:
 
@@ -214,7 +214,7 @@ Feature: Books / Edit Book Functionality
 - **404 Not Found Error** ✗
 - "The requested URL was not found on this server"
 - book_edit.php ไม่มีอยู่ หรือ path ผิด
-- ไม่มี Edit form แสดง
+- ไม่มี Edit form แสดง  
 - Edit functionality ไม่ทำงาน
 
 ### สาเหตุ:
@@ -228,24 +228,82 @@ Feature: Books / Edit Book Functionality
 
 ---
 
+## BUG-006
+
+Bug ID: BUG-006  
+ชื่อ: Books Management - ไม่มี Delete button ในตาราง  
+Severity: High  
+Priority: High  
+TC-ID: TC-BOOK-06  
+Feature: Books / Delete Book Functionality
+
+### ขั้นตอนการทำซ้ำ:
+
+1. Login เข้าระบบด้วย admin/admin123
+2. Go to Books Management page (localhost:8080/books.php)
+3. ดูตาราง Books ที่มีหนังสือหลายเล่ม
+4. ตรวจสอบ Actions column สำหรับแต่ละหนังสือ
+
+### คาดหวัง:
+
+- สำหรับแต่ละหนังสือในตาราง ควรมี 3 buttons:
+  - **View** button (สีเทา)
+  - **Edit** button (สีเหลือง)
+  - **Delete** button (สีแดง)
+- มี delete button ให้คลิกเพื่อลบหนังสือ
+- Delete functionality พร้อมใช้งาน
+
+### จริง:
+
+- ตาราง Books แสดง Actions column เฉพาะ:
+  - **View** button ✓
+  - **Edit** button ✓
+  - **Delete** button ✗ ไม่มี!
+- ทุกๆ แถวไม่มี Delete option
+- ไม่สามารถลบหนังสือได้จากตาราง
+
+### สาเหตุ:
+
+- Delete button HTML ไม่ถูก render ในตาราง
+- JavaScript หรือ PHP code ที่สร้าง Action buttons ไม่รวม delete
+- ไปยังดูหรือแก้ไข แต่ลบไปหายไปฟั้ง
+- Incomplete CRUD implementation
+
+### ผลกระทบ:
+
+- **Functionality:** ไม่สามารถลบหนังสือจากระบบได้
+- **Workaround:** อาจต้องลบจาก database หรือ command line
+- **UX:** ผู้ใช้งาน confused ว่าทำไมไม่มี delete
+- **Data Management:** ไม่สามารถจัดการข้อมูล corrupt/duplicate books
+- **Severity:** High - Missing essential CRUD operation
+
+### Attachment: 
+- BUG-006-missing-delete-button.png
+
+### Status: 
+New (ยืนยันแล้ว)
+
+---
+
 ## บันทึก:
 
 **BUG-001:** PHP Warnings on wrong password - TC-AUTH-02  
 **BUG-002:** PHP Warnings on invalid username - TC-AUTH-03  
 **BUG-003:** 🔴 SQL Injection Bypass Login - TC-AUTH-06  
 **BUG-004:** Dashboard Logic Error (Available > Total) - TC-DASH-02  
-**BUG-005:** 🔴 Edit Book page 404 Not Found - TC-BOOK-05
+**BUG-005:** 🔴 Edit Book page 404 Not Found - TC-BOOK-05  
+**BUG-006:** Missing Delete Button in Books Table - TC-BOOK-06
 
 ---
 
 ## สถานะ
 
-**Total Bugs Found:** 5  
+**Total Bugs Found:** 6  
 **Target:** 20-30 bugs  
-**Remaining:** 15-25 bugs ต้องหา
+**Remaining:** 14-24 bugs ต้องหา
 
 **CRITICAL Bugs:** 2 (SQL Injection, Missing Edit Page)  
-**HIGH Bugs:** 3 (PHP Errors x2, Dashboard Logic)
+**HIGH Bugs:** 4 (PHP Errors x2, Dashboard Logic, Missing Delete)
 
 ---
 
