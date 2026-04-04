@@ -84,24 +84,60 @@ Feature: Authentication / Login Page
 
 ### Attachment: BUG-002.png
 
-### Status:
+---
 
-New (ยืนยันแล้ว)
+## BUG-003
+
+Bug ID: BUG-003  
+ชื่อ: SQL Injection ใน Login form - Bypass การยืนยันตัวตน  
+Severity: Critical  
+Priority: High  
+TC-ID: TC-AUTH-06  
+Feature: Authentication / Login Page - Security
+
+### ขั้นตอนการทำซ้ำ:
+
+1. เปิด http://localhost:8080/login.php
+2. กรอก Username: `' OR '1'='1`
+3. กรอก Password: `' OR '1'='1`
+4. คลิกปุ่ม Login
+
+### คาดหวัง:
+
+- Login ไม่สำเร็จ
+- แสดง error message: "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง"
+- ไม่สามารถ bypass authentication ได้
+- ระบบป้องกัน SQL Injection อย่างเหมาะสม
+- ต้องใช้ Prepared Statements หรือ Parameterized Queries
+
+### จริง:
+
+- **Login สำเร็จ!** ระบบให้เข้าได้เป็น Administrator (admin)
+- เข้า Dashboard ได้โดยไม่ใส่รหัสผ่านจริง
+- แสดง "System Administrator (admin)" ตรง top right
+- SQL Injection payload ทำงานได้สำเร็จ
+- ไม่มีการ validate หรือ sanitize input
+
+### Attachment: BUG-003.png
 
 ---
 
 ## บันทึก:
 
 **BUG-001:** PHP Warnings on wrong password - TC-AUTH-02  
-**BUG-002:** PHP Warnings on invalid username - TC-AUTH-03
+**BUG-002:** PHP Warnings on invalid username - TC-AUTH-03  
+**BUG-003:** 🔴 **SQL Injection Bypass Login** - TC-AUTH-06 (CRITICAL!)
 
 ---
 
 ## สถานะ
 
-**Total Bugs Found:** 2  
+**Total Bugs Found:** 3  
 **Target:** 20-30 bugs  
-**Remaining:** 18-28 bugs ต้องหา
+**Remaining:** 17-27 bugs ต้องหา
+
+**CRITICAL Bugs:** 1 (SQL Injection)  
+**HIGH Bugs:** 2 (PHP Errors)
 
 ---
 
