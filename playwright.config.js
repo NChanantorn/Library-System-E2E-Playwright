@@ -13,10 +13,9 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   reporter: [
-    ['list'],
-    ['html', { open: 'never' }],
-    ['json', { outputFile: 'test-results/results.json' }]
-  ],
+  ['json', { outputFile: 'test-results/results.json' }],
+  ['html']
+],
 
   use: {
     /* 2. เพิ่ม Action Timeout: ให้เวลาแต่ละคำสั่ง เช่น click, fill นานขึ้น */
