@@ -28,7 +28,7 @@ test.describe('Books Management Finalized Tests', () => {
     await booksPage.submitBtn.first().click();
     
     // รอให้ Modal/Form ปิด และกลับมาที่ table
-    await page.waitForSelector('table tbody tr', { timeout: 20000 });
+    await page.waitForSelector('table tbody tr', { timeout: 10000 });
     
     // ค้นหาหนังสือในตาราง - ใช้ ISBN เป็นตัวอ้างอิง
     const bookRow = page.locator(`table tbody tr`).filter({ hasText: isbn });
