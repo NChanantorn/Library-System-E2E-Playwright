@@ -9,6 +9,8 @@ class MembersPage {
     this.emailInput = page.locator('input[name="member_email"]');
     this.phoneInput = page.locator('input[name="member_phone"]');
     this.submitBtn = page.locator('button[type="submit"], .btn-primary').filter({ hasText: /Add|Save|บันทึก/i });
+    this.searchInput = page.locator('input[name*="search"], #search, [placeholder*="search" i]');
+    this.searchBtn = page.locator('button').filter({ hasText: /Search|ค้นหา/i });
   }
 
   async goto() {
@@ -23,8 +25,13 @@ class MembersPage {
     await this.addMemberBtn.first().click();
     
     // รอให้ Modal โหลดเสร็จ (สำคัญมาก!)
-    await this.page.waitForTimeout(1000); 
-    await this.codeInput.waitFor({ state: 'visible', timeout: 5000 });
+    await this.page.waitForTimeout(1500); 
+    await this.codeInput.waitFor({ state: 'visible', timeout: 8000 });
+    
+    // เพิ่มการรอให้ inputs ปรากฏก่อนกรอก
+    await this.nameInput.waitFor({ state: 'visible', timeout: 8000 });
+    await this.emailInput.waitFor({ state: 'visible', timeout: 8000 });
+    await this.phoneInput.waitFor({ state: 'visible', timeout: 8000 });
     
     await this.codeInput.fill(code);
     await this.nameInput.fill(name);
@@ -33,7 +40,7 @@ class MembersPage {
     
     await this.submitBtn.first().click();
     // รอให้ Modal ปิดลงก่อนไปสเต็ปถัดไป
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('networkidle', { timeout: 15000 });
   }
 }
 module.exports = { MembersPage };

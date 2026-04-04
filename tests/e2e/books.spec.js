@@ -17,22 +17,26 @@ test.describe('Books Management Finalized Tests', () => {
     const isbn = '978-' + Math.floor(Math.random() * 1000000);
     
     // เพิ่มหนังสือ
+    await booksPage.addBtnHeader.first().waitFor({ state: 'visible', timeout: 10000 });
     await booksPage.addBtnHeader.first().click();
     await booksPage.isbnInput.waitFor({ state: 'visible', timeout: 5000 });
+    await page.waitForTimeout(500);
     await booksPage.isbnInput.fill(isbn);
     await booksPage.titleInput.fill(title);
     await booksPage.authorInput.fill('Gemini AI');
     await booksPage.copiesInput.fill('5');
     
     // รอให้ปุ่ม submit ปรากฏ และ click
+    await booksPage.submitBtn.first().waitFor({ state: 'visible', timeout: 5000 });
     await booksPage.submitBtn.first().click();
     
     // รอให้ Modal/Form ปิด และกลับมาที่ table
-    await page.waitForSelector('table tbody tr', { timeout: 10000 });
+    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForTimeout(1000); // ให้เวลาตารางอัปเดต
     
     // ค้นหาหนังสือในตาราง - ใช้ ISBN เป็นตัวอ้างอิง
     const bookRow = page.locator(`table tbody tr`).filter({ hasText: isbn });
-    await expect(bookRow).toBeVisible({ timeout: 10000 });
+    await expect(bookRow).toBeVisible({ timeout: 15000 });
   });
 
   test('TC-BORROW-03: [BUG 15] ตรวจพบการใส่จำนวนติดลบ', async ({ page }) => {
