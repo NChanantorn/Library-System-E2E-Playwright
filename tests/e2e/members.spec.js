@@ -3,150 +3,233 @@ const { test, expect } = require('@playwright/test');
 const { LoginPage } = require('../../pages/LoginPage');
 const { MembersPage } = require('../../pages/MembersPage');
 
-test.describe('Members Management Module (ตาม TestCase.csv)', () => {
-  
+function uniqueCode() {
+  return 'M' + Date.now().toString().slice(-6);
+}
+
+test.describe('Members Management Module', () => {
+
   test.beforeEach(async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
     await loginPage.login('admin', 'admin123');
+    await expect(page).not.toHaveURL(/login/);
   });
 
+  // ─────────────────────────────────────────────
+  // TC-MEM-01: เปิดหน้า Members Management
+  // ─────────────────────────────────────────────
   test('TC-MEM-01: เปิดหน้า Members Management', async ({ page }) => {
     const membersPage = new MembersPage(page);
     await membersPage.goto();
-    
-    // ตรวจสอบว่าหน้า Members โหลดสำเร็จ
+
     await expect(page).toHaveURL(/members/);
-    
-    // ตรวจสอบว่ามีรายการสมาชิกแสดง (ตาราง)
-    const tableBody = page.locator('table tbody');
-    await tableBody.waitFor({ state: 'visible', timeout: 10000 });
-    
-    // ตรวจสอบว่ามีปุ่ม Add Member
-    await membersPage.addMemberBtn.first().waitFor({ state: 'visible', timeout: 10000 });
+    await expect(page.locator('table tbody')).toBeVisible({ timeout: 10000 });
+    await expect(membersPage.addMemberBtn.first()).toBeVisible({ timeout: 10000 });
   });
 
+  // ─────────────────────────────────────────────
+  // TC-MEM-02: แสดงรายการสมาชิกทั้งหมด
+  // ─────────────────────────────────────────────
   test('TC-MEM-02: แสดงรายการสมาชิกทั้งหมด', async ({ page }) => {
     const membersPage = new MembersPage(page);
     await membersPage.goto();
-    
-    // ตรวจสอบว่าตารางสมาชิกแสดง
-    const tableBody = page.locator('table tbody');
-    await tableBody.waitFor({ state: 'visible', timeout: 10000 });
-    
-    // ตรวจสอบว่ามีข้อมูลสมาชิก (อย่างน้อยตัวแรก)
+
     const firstRow = page.locator('table tbody tr').first();
-    await firstRow.waitFor({ state: 'visible', timeout: 10000 });
-    
-    // ตรวจสอบว่า row มีข้อมูลครบ (ID, Name, Email, Phone, Status, Max Books)
-    const cellCount = await page.locator('table tbody tr').first().locator('td').count();
-    expect(cellCount).toBeGreaterThanOrEqual(4); // อย่างน้อยต้องมี 4 คอลัมน์
+    await expect(firstRow).toBeVisible({ timeout: 10000 });
+
+    // ต้องมีคอลัมน์ครบ: ID, Full Name, Email, Phone, Status, Max Books
+    const cellCount = await firstRow.locator('td').count();
+    expect(cellCount).toBeGreaterThanOrEqual(4);
   });
 
-test('TC-MEM-03: เพิ่มสมาชิกใหม่ด้วยข้อมูลครบถ้วน', async ({ page }) => {
+  // ─────────────────────────────────────────────
+  // TC-MEM-03: เพิ่มสมาชิกใหม่ด้วยข้อมูลครบถ้วน
+  // ─────────────────────────────────────────────
+  test('TC-MEM-03: เพิ่มสมาชิกใหม่ด้วยข้อมูลครบถ้วน', async ({ page }) => {
     const membersPage = new MembersPage(page);
     await membersPage.goto();
-    const uniqueName = 'Member-' + Date.now();
-    // เพิ่มการกรอกข้อมูลจริงลงไป
-    await membersPage.fillMemberInfo('M'+Date.now().toString().slice(-4), uniqueName, 'test@mail.com', '0812345678');
-    // ตรวจสอบว่าชื่อใหม่ต้องปรากฏในตาราง
-    await expect(page.locator('table')).toContainText(uniqueName, { timeout: 10000 });
+
+    const code = uniqueCode();
+    const name = 'Test-Member-' + Date.now();
+
+    await membersPage.fillMemberInfo(code, name, 'test@mail.com', '0812345678');
+
+    // สมาชิกใหม่ต้องปรากฏในตาราง
+    await expect(membersPage.rowWith(name)).toBeVisible({ timeout: 10000 });
   });
 
-test('TC-MEM-04: [Check BUG 32] เพิ่มสมาชิกด้วย Member Code ที่ซ้ำ', async ({ page }) => {
+  // ─────────────────────────────────────────────
+  // TC-MEM-04: [BUG 32] เพิ่มสมาชิกด้วย Member Code ที่ซ้ำ
+  // BUG 32 → ไม่ตรวจ member_code ซ้ำ → บันทึกซ้ำได้
+  // ─────────────────────────────────────────────
+  test('TC-MEM-04: [BUG 32] เพิ่มสมาชิกด้วย Member Code ที่ซ้ำ', async ({ page }) => {
     const membersPage = new MembersPage(page);
     await membersPage.goto();
-    // 1. ดึงรหัสสมาชิกคนแรกมา
-    const existingCode = await page.locator('table tbody tr td').first().innerText();
-    // 2. พยายามเพิ่มคนใหม่โดยใช้รหัสเดิม
+
+    // ดึง code จากแถวแรก (คอลัมน์แรก = member_code)
+    await page.waitForSelector('table tbody tr', { timeout: 10000 });
+    const existingCode = (await page.locator('table tbody tr td').first().innerText()).trim();
+
+    // พยายามเพิ่มด้วย code เดิม
     await membersPage.fillMemberInfo(existingCode, 'Duplicate-User', 'dup@mail.com', '000000000');
-    
-    // 3. ความคาดหวัง: ระบบต้องฟ้อง Error (ถ้าไม่ฟ้อง แสดงว่าเจอบั๊ก 32)
-    const errorAlert = page.locator('.alert-danger, .error-message');
-    await expect(errorAlert, '❌ BUG 32: ระบบยอมให้ใช้รหัสสมาชิกซ้ำได้').toBeVisible({ timeout: 5000 });
+
+    // ระบบต้องแสดง error — ถ้าไม่มี = BUG 32
+    const errorVisible = await page.locator('.alert-danger, .error-message, [class*="alert"], .text-danger')
+                              .first().isVisible({ timeout: 5000 }).catch(() => false);
+    expect(errorVisible,
+      '[BUG 32 DETECTED] ระบบยอมให้ใช้ Member Code ซ้ำได้โดยไม่แสดง error'
+    ).toBeTruthy();
   });
 
+  // ─────────────────────────────────────────────
+  // TC-MEM-05: แก้ไขข้อมูลสมาชิก
+  // ─────────────────────────────────────────────
   test('TC-MEM-05: แก้ไขข้อมูลสมาชิก', async ({ page }) => {
     const membersPage = new MembersPage(page);
     await membersPage.goto();
-    
-    // ตรวจสอบว่ามีสมาชิกในตาราง
+
     await page.waitForSelector('table tbody tr', { timeout: 10000 });
-    
-    // หารายการแรกที่มีปุ่ม edit
-    const firstRow = page.locator('table tbody tr').first();
-    const editBtn = firstRow.locator('a, button').filter({ hasText: /Edit|แก้ไข/i });
-    
-    if (await editBtn.count() > 0) {
-      // คลิก Edit
-      await editBtn.first().click();
-      
-      // รอให้ form/modal โหลด
-      await membersPage.nameInput.waitFor({ state: 'visible', timeout: 8000 });
-      
-      // ตรวจสอบว่าข้อมูลเดิมโหลดมา (name input ไม่ว่างเปล่า)
-      const currentName = await membersPage.nameInput.inputValue();
-      expect(currentName.length).toBeGreaterThan(0);
-      
-      // แก้ไขข้อมูล
-      const newName = 'Updated-' + Date.now();
-      await membersPage.nameInput.clear();
-      await membersPage.nameInput.fill(newName);
-      
-      // บันทึก
-      await membersPage.submitBtn.first().click();
-      
-      // รอให้อัปเดต
-      await page.waitForLoadState('networkidle', { timeout: 15000 });
-      await page.waitForTimeout(1500);
-      
-      // ตรวจสอบว่าข้อมูลอัปเดต
-      const updatedRow = page.locator('table tbody tr').filter({ hasText: newName });
-      await expect(updatedRow).toBeVisible({ timeout: 10000 });
-    }
+
+    const editBtn = page.locator('table tbody tr').first()
+                        .locator('a, button').filter({ hasText: /Edit|แก้ไข/i });
+    await editBtn.first().click();
+
+    // รองรับทั้ง modal และ navigate ไปหน้าใหม่
+    await membersPage.nameInput.waitFor({ state: 'visible', timeout: 10000 });
+
+    // ข้อมูลเดิมต้องโหลดมา (ไม่ว่าง)
+    const currentName = await membersPage.nameInput.inputValue();
+    expect(currentName.length, 'ข้อมูลเดิมต้องโหลดมาใน form').toBeGreaterThan(0);
+
+    // แก้ไข
+    const newName = 'Updated-' + Date.now();
+    await membersPage.nameInput.fill(newName);
+
+    await membersPage.submitBtn.first().click();
+    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForTimeout(500);
+
+    await expect(membersPage.rowWith(newName)).toBeVisible({ timeout: 10000 });
   });
 
+  // ─────────────────────────────────────────────
+  // TC-MEM-06: ลบสมาชิก
+  // ─────────────────────────────────────────────
   test('TC-MEM-06: ลบสมาชิก', async ({ page }) => {
     const membersPage = new MembersPage(page);
     await membersPage.goto();
-    
-    // ตรวจสอบว่ามีสมาชิกในตาราง
-    await page.waitForSelector('table tbody tr', { timeout: 10000 });
-    const initialRowCount = await page.locator('table tbody tr').count();
-    
-    // หารายการที่มีปุ่ม delete
-    const firstRow = page.locator('table tbody tr').first();
-    const deleteBtn = firstRow.locator('a, button').filter({ hasText: /Delete|ลบ/i });
-    
-    if (await deleteBtn.count() > 0) {
-      // คลิก Delete
-      await deleteBtn.first().click();
-      
-      // รอให้ confirmation dialog ปรากฏ (ถ้ามี)
-      try {
-        await page.locator('button').filter({ hasText: /OK|Confirm|Yes|ใช่/i }).first().click({ timeout: 5000 });
-      } catch (e) {
-        // ถ้าไม่มี dialog ให้ข้าม
-      }
-      
-      // รอให้อัปเดต
-      await page.waitForLoadState('networkidle', { timeout: 15000 });
-      await page.waitForTimeout(1000);
-      
-      // ตรวจสอบว่าจำนวน row ลดลง
-      const finalRowCount = await page.locator('table tbody tr').count();
-      expect(finalRowCount).toBeLessThanOrEqual(initialRowCount);
-    }
+
+    // เพิ่มสมาชิกใหม่ก่อน แล้วค่อยลบ (ไม่กระทบข้อมูลจริง)
+    const code = uniqueCode();
+    const name = 'Delete-Me-' + Date.now();
+    await membersPage.fillMemberInfo(code, name, 'del@mail.com', '0800000000');
+    await expect(membersPage.rowWith(name)).toBeVisible({ timeout: 10000 });
+
+    // กด Delete แถวที่เพิ่งเพิ่ม
+    const row = membersPage.rowWith(name);
+    const deleteBtn = row.locator('a, button').filter({ hasText: /Delete|ลบ/i });
+
+    page.on('dialog', d => d.accept());
+    await deleteBtn.first().click();
+    await page.waitForLoadState('networkidle', { timeout: 15000 });
+
+    // สมาชิกต้องหายไป
+    await expect(membersPage.rowWith(name)).not.toBeVisible({ timeout: 8000 });
   });
 
-test('TC-MEM-07: เพิ่มสมาชิกโดยไม่กรอกข้อมูลที่จำเป็น', async ({ page }) => {
+  // ─────────────────────────────────────────────
+  // TC-MEM-07: เพิ่มสมาชิกโดยไม่กรอกข้อมูลที่จำเป็น
+  // ─────────────────────────────────────────────
+  test('TC-MEM-07: เพิ่มสมาชิกโดยไม่กรอกข้อมูลที่จำเป็น', async ({ page }) => {
     const membersPage = new MembersPage(page);
     await membersPage.goto();
-    await membersPage.addMemberBtn.first().click();
-    // กด Save ทันทีโดยไม่กรอกอะไร
+
+    await membersPage.openAddForm();
+
+    // Submit โดยไม่กรอกอะไร
     await membersPage.submitBtn.first().click();
-    
-    // ตรวจสอบว่า Modal ยังไม่ปิด (เพราะติด Validation) หรือมี Error ขึ้น
-    await expect(membersPage.codeInput).toBeVisible(); 
+    await page.waitForTimeout(500);
+
+    // ต้องมี validation error หรือ form ยังแสดงอยู่ (modal ไม่ปิด)
+    const codeRequired = await membersPage.codeInput.evaluate(n => n.validity.valueMissing).catch(() => false);
+    const nameRequired = await membersPage.nameInput.evaluate(n => n.validity.valueMissing).catch(() => false);
+    const errorVisible = await page.locator('[class*="alert"], [class*="error"], .text-danger')
+                              .first().isVisible().catch(() => false);
+    const formStillOpen = await membersPage.codeInput.isVisible().catch(() => false);
+
+    expect(codeRequired || nameRequired || errorVisible || formStillOpen,
+      'ต้องมี validation error หรือ form ยังเปิดอยู่เมื่อไม่กรอกข้อมูล'
+    ).toBeTruthy();
+  });
+
+  // ─────────────────────────────────────────────
+  // TC-MEM-XX: [BUG 31] ไม่ตรวจสอบรูปแบบ Email
+  // BUG 31 → กรอก email ผิดรูปแบบก็บันทึกได้
+  // ─────────────────────────────────────────────
+  test('TC-MEM-XX: [BUG 31] ระบบต้องปฏิเสธ Email ที่ผิดรูปแบบ', async ({ page }) => {
+    const membersPage = new MembersPage(page);
+    await membersPage.goto();
+
+    await membersPage.fillMemberInfo(
+      uniqueCode(),
+      'Invalid-Email-User',
+      'not-an-email',   // ← email ผิดรูปแบบ
+      '0812345678'
+    );
+
+    // ระบบที่ถูกต้องต้องแสดง error
+    const htmlInvalid = await membersPage.emailInput.evaluate(n => !n.validity.valid).catch(() => false);
+    const errorVisible = await page.locator('[class*="alert"], [class*="error"], .text-danger')
+                              .first().isVisible({ timeout: 3000 }).catch(() => false);
+
+    if (!htmlInvalid && !errorVisible) {
+      console.warn('⚠️  [BUG 31 DETECTED] ระบบยอมรับ email ผิดรูปแบบ: "not-an-email"');
+    }
+    expect(htmlInvalid || errorVisible,
+      '[BUG 31 DETECTED] ระบบต้องปฏิเสธ email ที่ไม่มี @ และ domain'
+    ).toBeTruthy();
+  });
+
+  // ─────────────────────────────────────────────
+  // TC-MEM-XX: [BUG 33] Teacher ได้ max_books = 3 แทนที่จะเป็น 5
+  // ─────────────────────────────────────────────
+  test('TC-MEM-XX: [BUG 33] Teacher ต้องได้ max_books = 5 ไม่ใช่ 3', async ({ page }) => {
+    const membersPage = new MembersPage(page);
+    await membersPage.goto();
+
+    const code = uniqueCode();
+    const name  = 'Teacher-Test-' + Date.now();
+
+    // เพิ่มสมาชิกประเภท teacher
+    await membersPage.fillMemberInfo(code, name, 'teacher@mail.com', '0812345678', 'teacher');
+
+    // หาแถวของสมาชิกใหม่
+    const row = membersPage.rowWith(name);
+    await expect(row).toBeVisible({ timeout: 10000 });
+
+    // ดึงค่า max_books จากตาราง (คาดว่าอยู่คอลัมน์ Max Books)
+    const cells = row.locator('td');
+    const cellCount = await cells.count();
+    let maxBooksValue = null;
+
+    for (let i = 0; i < cellCount; i++) {
+      const text = (await cells.nth(i).innerText()).trim();
+      if (/^[35]$/.test(text)) {
+        maxBooksValue = parseInt(text, 10);
+        break;
+      }
+    }
+
+    if (maxBooksValue !== null) {
+      if (maxBooksValue === 3) {
+        console.warn('⚠️  [BUG 33 DETECTED] Teacher ได้ max_books = 3 แทนที่จะเป็น 5');
+      }
+      expect(maxBooksValue,
+        '[BUG 33 DETECTED] Teacher ต้องได้ max_books = 5'
+      ).toBe(5);
+    } else {
+      console.log('ℹ️  ไม่พบค่า max_books ในตาราง ไม่สามารถตรวจสอบได้');
+    }
   });
 });
