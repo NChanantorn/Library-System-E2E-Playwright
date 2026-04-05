@@ -214,7 +214,7 @@ Feature: Books / Edit Book Functionality
 - **404 Not Found Error** ✗
 - "The requested URL was not found on this server"
 - book_edit.php ไม่มีอยู่ หรือ path ผิด
-- ไม่มี Edit form แสดง  
+- ไม่มี Edit form แสดง
 - Edit functionality ไม่ทำงาน
 
 ### สาเหตุ:
@@ -292,7 +292,7 @@ Feature: Members / Add Member - Validation & Error Handling
 ### คาดหวัง:
 
 - ระบบตรวจสอบ Member Code ไม่ให้ซ้ำกันก่อน submit
-- ถ้า Member Code ซ้ำ → แสดง validation error message ที่เป็นมิตร
+- ถ้า Member Code ซ้ำ → แสดง validation error message
 - Error message: "Member code already exists" / "รหัสสมาชิกนี้มีอยู่แล้ว"
 - Form ยังอยู่ ให้แก้ไขได้
 - ไม่มี fatal/technical errors
@@ -304,7 +304,7 @@ Feature: Members / Add Member - Validation & Error Handling
 - ระบบพยายาม insert ลงฐานข้อมูล
 - **Fatal error แสดงต่อผู้ใช้:**
   ```
-  Fatal error: Uncaught mysqli_sql_exception: Duplicate entry 'M001' 
+  Fatal error: Uncaught mysqli_sql_exception: Duplicate entry 'M001'
   for key 'members.member_code' in /var/www/html/member_add.php:31
   ```
 - Technical/Database error ปรากฏต่อสาธารณะ
@@ -318,18 +318,64 @@ Feature: Members / Add Member - Validation & Error Handling
 - Database constraint unique key มีอยู่แต่ handled ไม่ดี
 - Error reporting turned on → technical details ปรากฏต่อผู้ใช้
 
+### Attachment: BUG-007.png
+
+---
+
+## BUG-008
+
+Bug ID: BUG-008  
+ชื่อ: Members Management - ไม่มี Action Buttons (Edit, Delete)  
+Severity: High  
+Priority: High  
+TC-ID: TC-MEM-05  
+Feature: Members / Edit Member Functionality
+
+### ขั้นตอนการทำซ้ำ:
+
+1. Login เข้าระบบด้วย admin/admin123
+2. Go to Members Management page (localhost:8080/members.php)
+3. ดูตาราง Members ที่แสดงรายชื่อสมาชิก
+4. ตรวจสอบหาปุ่ม Edit สำหรับสมาชิก
+
+### คาดหวัง:
+
+- Members table ควรมี Actions column ที่แสดง buttons:
+  - **View** button (สีเทา)
+  - **Edit** button (สีเหลือง)
+  - **Delete** button (สีแดง) OPT
+- สำหรับแต่ละ row สามารถคลิก Edit เพื่อแก้ไขข้อมูลสมาชิก
+- Edit functionality พร้อมใช้งาน
+
+### จริง:
+
+- **Members table ไม่มี Actions column เลย!**
+- ตาราง แสดงเฉพาะ: Member Code, Full Name, Email, Phone, Type, Max Books, Status, Registration
+- ไม่มี Edit button, Delete button, View button
+- ไม่สามารถแก้ไขข้อมูลสมาชิกได้จากตาราง
+- ผู้ใช้ไม่รู้ว่าจะทำอย่างไรเพื่อ edit
+
+### สาเหตุ:
+
+- Action buttons HTML ไม่ถูก render ในตาราง
+- PHP code ที่สร้างตาราง ไม่รวม Actions column
+- Incomplete table implementation
+- Similar issue to BUG-006 (Missing Delete in Books)
+
 ### ผลกระทบ:
 
-- **UX:** ผู้ใช้เห็น technical error ไม่เข้าใจ
-- **Validation:** ข้าด input validation ที่พื้นฐาน
-- **Error Handling:** ไม่มี graceful recovery
-- **Security:** Technical info leak (database structure, function names)
-- **Data Integrity:** ระบบ rely on database constraint แทน application logic
-- **Severity:** High - Missing validation + poor error handling
+- **Functionality:** ไม่สามารถแก้ไขข้อมูลสมาชิกจากตาราง
+- **Workaround:** ไม่มี alternative way ที่ชัดเจน
+- **UX:** ผู้ใช้ confused ว่าจะ edit member ยังไง
+- **Completeness:** CRUD ขาดครึ่ง (มี Add เท่านั้น)
+- **Severity:** High - Edit functionality ขาดแล้ว
+
+### Pattern Error:
+
+นี่เป็นปัญหาเดียวกับ BUG-006 - Action buttons incomplete ในทั้ง Books และ Members modules
 
 ### Attachment: 
-- BUG-007-duplicate-member-code-error.png
-- BUG-007-fatal-error-message.png
+- BUG-008-members-no-action-buttons.png
 
 ### Status: 
 New (ยืนยันแล้ว)
@@ -344,18 +390,19 @@ New (ยืนยันแล้ว)
 **BUG-004:** Dashboard Logic Error (Available > Total) - TC-DASH-02  
 **BUG-005:** 🔴 Edit Book page 404 Not Found - TC-BOOK-05  
 **BUG-006:** Missing Delete Button in Books Table - TC-BOOK-06  
-**BUG-007:** No Duplicate Check + Fatal Error on Member Code - TC-MEM-04
+**BUG-007:** No Duplicate Check + Fatal Error on Member Code - TC-MEM-04  
+**BUG-008:** Missing Action Buttons in Members Table - TC-MEM-05
 
 ---
 
 ## สถานะ
 
-**Total Bugs Found:** 7  
+**Total Bugs Found:** 8  
 **Target:** 20-30 bugs  
-**Remaining:** 13-23 bugs ต้องหา
+**Remaining:** 12-22 bugs ต้องหา
 
 **CRITICAL Bugs:** 2 (SQL Injection, Missing Edit Page)  
-**HIGH Bugs:** 5 (PHP Errors x2, Dashboard Logic, Missing Delete, Duplicate Check)
+**HIGH Bugs:** 6 (PHP Errors x2, Dashboard Logic, Missing Delete/Edit x2, Duplicate Check)
 
 ---
 
