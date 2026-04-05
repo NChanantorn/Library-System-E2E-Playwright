@@ -253,32 +253,83 @@ Feature: Books / Delete Book Functionality
 - มี delete button ให้คลิกเพื่อลบหนังสือ
 - Delete functionality พร้อมใช้งาน
 
-### จริง:
+### ผลจริง:
 
 - ตาราง Books แสดง Actions column เฉพาะ:
   - **View** button ✓
   - **Edit** button ✓
-  - **Delete** button ✗ ไม่มี!
-- ทุกๆ แถวไม่มี Delete option
+  - **Delete** button ✗ ไม่มี
 - ไม่สามารถลบหนังสือได้จากตาราง
 
 ### สาเหตุ:
 
 - Delete button HTML ไม่ถูก render ในตาราง
 - JavaScript หรือ PHP code ที่สร้าง Action buttons ไม่รวม delete
-- ไปยังดูหรือแก้ไข แต่ลบไปหายไปฟั้ง
-- Incomplete CRUD implementation
+
+### Attachment: BUG-006.png
+
+---
+
+## BUG-007
+
+Bug ID: BUG-007  
+ชื่อ: Members - No Duplicate Check for Member Code + Fatal Error  
+Severity: High  
+Priority: High  
+TC-ID: TC-MEM-04  
+Feature: Members / Add Member - Validation & Error Handling
+
+### ขั้นตอนการทำซ้ำ:
+
+1. Login เข้าระบบด้วย admin/admin123
+2. Go to Members Management page
+3. Click "Add New Member" button
+4. ใส่ Member Code: M001 (code ที่มีอยู่แล้ว)
+5. ใส่ Full Name: Test Member
+6. ใส่ Email: test@gmail.com และ Phone: 0949856426
+7. Click "Add Member" button
+
+### คาดหวัง:
+
+- ระบบตรวจสอบ Member Code ไม่ให้ซ้ำกันก่อน submit
+- ถ้า Member Code ซ้ำ → แสดง validation error message ที่เป็นมิตร
+- Error message: "Member code already exists" / "รหัสสมาชิกนี้มีอยู่แล้ว"
+- Form ยังอยู่ ให้แก้ไขได้
+- ไม่มี fatal/technical errors
+
+### จริง:
+
+- ไม่มี front-end validation สำหรับ duplicate check
+- Submit form ได้โดยใช้ Member Code ซ้ำ
+- ระบบพยายาม insert ลงฐานข้อมูล
+- **Fatal error แสดงต่อผู้ใช้:**
+  ```
+  Fatal error: Uncaught mysqli_sql_exception: Duplicate entry 'M001' 
+  for key 'members.member_code' in /var/www/html/member_add.php:31
+  ```
+- Technical/Database error ปรากฏต่อสาธารณะ
+- ไม่มี graceful error handling
+
+### สาเหตุ:
+
+- ไม่มี form validation ในระดับ client-side (JavaScript)
+- ไม่มี query ตรวจสอบ duplicate ก่อน insert
+- ไม่มี try-catch สำหรับ database errors
+- Database constraint unique key มีอยู่แต่ handled ไม่ดี
+- Error reporting turned on → technical details ปรากฏต่อผู้ใช้
 
 ### ผลกระทบ:
 
-- **Functionality:** ไม่สามารถลบหนังสือจากระบบได้
-- **Workaround:** อาจต้องลบจาก database หรือ command line
-- **UX:** ผู้ใช้งาน confused ว่าทำไมไม่มี delete
-- **Data Management:** ไม่สามารถจัดการข้อมูล corrupt/duplicate books
-- **Severity:** High - Missing essential CRUD operation
+- **UX:** ผู้ใช้เห็น technical error ไม่เข้าใจ
+- **Validation:** ข้าด input validation ที่พื้นฐาน
+- **Error Handling:** ไม่มี graceful recovery
+- **Security:** Technical info leak (database structure, function names)
+- **Data Integrity:** ระบบ rely on database constraint แทน application logic
+- **Severity:** High - Missing validation + poor error handling
 
 ### Attachment: 
-- BUG-006-missing-delete-button.png
+- BUG-007-duplicate-member-code-error.png
+- BUG-007-fatal-error-message.png
 
 ### Status: 
 New (ยืนยันแล้ว)
@@ -292,18 +343,19 @@ New (ยืนยันแล้ว)
 **BUG-003:** 🔴 SQL Injection Bypass Login - TC-AUTH-06  
 **BUG-004:** Dashboard Logic Error (Available > Total) - TC-DASH-02  
 **BUG-005:** 🔴 Edit Book page 404 Not Found - TC-BOOK-05  
-**BUG-006:** Missing Delete Button in Books Table - TC-BOOK-06
+**BUG-006:** Missing Delete Button in Books Table - TC-BOOK-06  
+**BUG-007:** No Duplicate Check + Fatal Error on Member Code - TC-MEM-04
 
 ---
 
 ## สถานะ
 
-**Total Bugs Found:** 6  
+**Total Bugs Found:** 7  
 **Target:** 20-30 bugs  
-**Remaining:** 14-24 bugs ต้องหา
+**Remaining:** 13-23 bugs ต้องหา
 
 **CRITICAL Bugs:** 2 (SQL Injection, Missing Edit Page)  
-**HIGH Bugs:** 4 (PHP Errors x2, Dashboard Logic, Missing Delete)
+**HIGH Bugs:** 5 (PHP Errors x2, Dashboard Logic, Missing Delete, Duplicate Check)
 
 ---
 
