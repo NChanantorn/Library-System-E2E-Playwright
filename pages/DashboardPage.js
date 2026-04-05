@@ -3,34 +3,30 @@ class DashboardPage {
   constructor(page) {
     this.page = page;
 
-    // Stat cards — รองรับหลาย CSS class
-    this.totalBooksCard     = page.locator('.card, .stat-card, [class*="card"]').filter({ hasText: /Total Books|หนังสือทั้งหมด/i }).first();
-    this.availableBooksCard = page.locator('.card, .stat-card, [class*="card"]').filter({ hasText: /Available Books|หนังสือที่ว่าง/i }).first();
-    this.activeMembersCard  = page.locator('.card, .stat-card, [class*="card"]').filter({ hasText: /Active Members|สมาชิกที่ใช้งาน/i }).first();
-    this.borrowedBooksCard  = page.locator('.card, .stat-card, [class*="card"]').filter({ hasText: /Borrowed Books|หนังสือที่ยืม/i }).first();
+    // โครงสร้างจริง: generic[ref=e27] > h5 "Total Books"[ref=e28] + h2 "9"[ref=e29]
+    // ใช้ getByRole heading แทน เพราะ generic ไม่มี class
+    this.totalBooksCard     = page.locator('h5', { hasText: 'Total Books' });
+    this.availableBooksCard = page.locator('h5', { hasText: 'Available' });
+    this.activeMembersCard  = page.locator('h5', { hasText: 'Active Members' });
+    this.borrowedBooksCard  = page.locator('h5', { hasText: 'Borrowed' });
 
-    // Navigation links (ใช้ใน menu/sidebar)
-    this.booksLink     = page.locator('nav a, .sidebar a, .menu a').filter({ hasText: /^Books$|^หนังสือ$/i }).first();
-    this.membersLink   = page.locator('nav a, .sidebar a, .menu a').filter({ hasText: /^Members$|^สมาชิก$/i }).first();
-    this.borrowingLink = page.locator('nav a, .sidebar a, .menu a').filter({ hasText: /Borrow|การยืม/i }).first();
-    this.reportsLink   = page.locator('nav a, .sidebar a, .menu a').filter({ hasText: /Reports|รายงาน/i }).first();
+    // Navigation links
+    this.booksLink     = page.getByRole('link', { name: /^Books$/i });
+    this.membersLink   = page.getByRole('link', { name: /^Members$/i });
+    this.borrowingLink = page.getByRole('link', { name: /^Borrow$/i });
+    this.reportsLink   = page.getByRole('link', { name: /^Reports$/i });
   }
 
   async goto() {
     await this.page.goto('http://localhost:8080/index.php');
     await this.page.waitForLoadState('networkidle', { timeout: 15000 });
-    await this.page.waitForTimeout(500);
   }
 
-  // ดึงตัวเลขจาก card ที่ระบุ keyword
-  async getStatValue(keyword) {
-    const card = this.page.locator('.card, .stat-card, [class*="card"]')
-                          .filter({ hasText: keyword }).first();
-    await card.waitFor({ state: 'visible', timeout: 8000 });
-    // ตัวเลขมักอยู่ใน h2, h3, .number, หรือ element ที่มีแค่ตัวเลข
-    const numEl = card.locator('h1, h2, h3, h4, .number, .count, [class*="value"], [class*="stat"]')
-                      .filter({ hasText: /^\d+$/ }).first();
-    const text = await numEl.innerText();
+  // h5 กับ h2 เป็น sibling ใน parent เดียวกัน — ใช้ xpath หา h2 ถัดจาก h5
+  async getStatValue(h5Locator) {
+    await h5Locator.waitFor({ state: 'visible', timeout: 8000 });
+    const h2 = h5Locator.locator('xpath=following-sibling::h2');
+    const text = await h2.innerText();
     return parseInt(text.trim(), 10);
   }
 

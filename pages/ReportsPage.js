@@ -60,7 +60,7 @@ class ReportsPage {
       const record = await this.getOverdueRecord(i);
       const daysOverdue = parseInt(record.daysOverdue.replace(/[^0-9]/g, ''), 10) || 0;
       const fine = parseFloat(record.fine.replace(/[^0-9.]/g, '')) || 0;
-      const expected = daysOverdue * 10;
+      const expected = daysOverdue * 5; // ตาม rule ที่กำหนดไว้ว่า Fine = 5 Baht/day
 
       results.push({
         record,

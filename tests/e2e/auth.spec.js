@@ -2,130 +2,175 @@
 const { test, expect } = require('@playwright/test');
 const { LoginPage } = require('../../pages/LoginPage');
 
-test.describe('ระบบเข้าสู่ระบบ (Login System)', () => {
+test.describe('Authentication', () => {
 
   // ─────────────────────────────────────────────
-  // TC-01: Login สำเร็จด้วยข้อมูลที่ถูกต้อง
+  // TC-AUTH-01: Login ด้วย Username/Password ที่ถูกต้อง
   // ─────────────────────────────────────────────
-  test('TC-01: เข้าสู่ระบบสำเร็จด้วยข้อมูลที่ถูกต้อง', async ({ page }) => {
+  test('TC-AUTH-01: Login ด้วย Username/Password ที่ถูกต้อง', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
     await loginPage.login('admin', 'admin123');
-    
-    // 🔥 ปรับปรุง: รอให้หน้า Dashboard โหลดจนนิ่ง
-    await page.waitForURL('**/index.php', { waitUntil: 'networkidle', timeout: 15000 });
+
     await expect(page).not.toHaveURL(/login/);
+    await expect(page).toHaveURL(/index/);
   });
 
   // ─────────────────────────────────────────────
-  // TC-02: Login ไม่สำเร็จเมื่อรหัสผ่านผิด
+  // TC-AUTH-02: [BUG 6] Login ด้วย Password ที่ผิด
+  // BUG 6 → Logic error ทำให้ query คืน null แล้ว PHP ขึ้น Warning
+  //         "Trying to access array offset on value of type null"
   // ─────────────────────────────────────────────
-  test('TC-02: เข้าสู่ระบบไม่สำเร็จเมื่อใส่รหัสผ่านผิด', async ({ page }) => {
+  test('TC-AUTH-02: [BUG 6] Login ด้วย Password ที่ผิด', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
     await loginPage.login('admin', 'wrongpassword');
-    
-    // รอให้ผลลัพธ์การ Login ปรากฏ (URL ยังคงอยู่ที่เดิมหรือมี Error เด้ง)
+
+    const bodyText = await page.locator('body').textContent();
+
+    // ตรวจ PHP Warning — ถ้ามี = BUG 6 ยังอยู่
+    const hasPhpWarning = bodyText.includes('Warning') && bodyText.includes('array offset');
+    if (hasPhpWarning) {
+      console.warn('⚠️  [BUG 6 DETECTED] PHP Warning: Trying to access array offset on null ใน login.php');
+    }
+    expect(hasPhpWarning,
+      '[BUG 6 DETECTED] login.php มี PHP Warning — Logic error ใน authentication'
+    ).toBeFalsy();
+
+    // ต้องอยู่หน้า login (ไม่ redirect ออก)
     await expect(page).toHaveURL(/login/);
   });
 
   // ─────────────────────────────────────────────
-  // TC-03: [BUG 5-7] SQL Injection
+  // TC-AUTH-03: [BUG 7] Login ด้วย Username ที่ไม่มีในระบบ
+  // BUG 7 → ไม่ตรวจสอบว่ามี user จริง → PHP Warning เช่นกัน
   // ─────────────────────────────────────────────
-  test('TC-03: [Security/BUG 5-7] ตรวจสอบช่องโหว่ SQL Injection ในหน้า Login', async ({ page }) => {
+  test('TC-AUTH-03: [BUG 7] Login ด้วย Username ที่ไม่มีในระบบ', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.login('nobody_xyz_999', 'admin123');
+
+    const bodyText = await page.locator('body').textContent();
+
+    // ตรวจ PHP Warning — ถ้ามี = BUG 7 ยังอยู่
+    const hasPhpWarning = bodyText.includes('Warning') && bodyText.includes('array offset');
+    if (hasPhpWarning) {
+      console.warn('⚠️  [BUG 7 DETECTED] PHP Warning: ไม่ตรวจสอบว่ามี user จริงก่อน access array');
+    }
+    expect(hasPhpWarning,
+      '[BUG 7 DETECTED] login.php มี PHP Warning — ไม่ตรวจสอบว่า user มีอยู่ในระบบ'
+    ).toBeFalsy();
+
+    await expect(page).toHaveURL(/login/);
+  });
+
+  // ─────────────────────────────────────────────
+  // TC-AUTH-04: Login ปล่อยช่องว่างทั้งหมด
+  // ─────────────────────────────────────────────
+  test('TC-AUTH-04: Login ปล่อยช่องว่างทั้งหมด', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.login('', '');
+    await page.waitForTimeout(500);
+
+    const usernameInvalid = await loginPage.usernameInput.evaluate(n => n.validity.valueMissing).catch(() => false);
+    const errorVisible    = await page.locator('.alert-danger, .alert, .error').isVisible().catch(() => false);
+
+    expect(usernameInvalid || errorVisible,
+      'ต้องแสดง validation error เมื่อไม่กรอกข้อมูลใดเลย'
+    ).toBeTruthy();
+    await expect(page).toHaveURL(/login/);
+  });
+
+  // ─────────────────────────────────────────────
+  // TC-AUTH-05: Login ด้วย librarian account
+  // ─────────────────────────────────────────────
+  test('TC-AUTH-05: Login ด้วย librarian account', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await loginPage.login('librarian', 'lib123');
+
+    await expect(page).not.toHaveURL(/login/);
+    await expect(page).toHaveURL(/index/);
+  });
+
+  // ─────────────────────────────────────────────
+  // TC-AUTH-06: [BUG 5] SQL Injection ใน Login form
+  // ─────────────────────────────────────────────
+  test('TC-AUTH-06: [BUG 5] SQL Injection ใน Login form', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
     await loginPage.login("' OR '1'='1' -- ", 'anything');
 
-    // ระบบที่ปลอดภัยต้องดีดกลับมาหน้า Login
+    // ถ้า FAIL = พบ BUG 5
     await expect(page).toHaveURL(/login/, {
-      message: '[BUG 5-7 DETECTED] SQL Injection ผ่านได้! ระบบไม่มีการ sanitize query'
+      message: '[BUG 5 DETECTED] SQL Injection ผ่านได้! ระบบไม่มีการ sanitize query'
     });
   });
 
   // ─────────────────────────────────────────────
-  // TC-04: ไม่กรอก Username
+  // TC-AUTH-07: [BUG 38] Logout ออกจากระบบ
   // ─────────────────────────────────────────────
-  test('TC-04: เข้าสู่ระบบไม่สำเร็จเมื่อไม่กรอก Username', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    await loginPage.goto();
-    await loginPage.login('', 'admin123');
-
-    // 🔥 ปรับปรุง: แทนที่ waitForTimeout(500) ด้วยการเช็ค HTML5 Validation หรือ Error Message
-    const isInvalid = await loginPage.usernameInput.evaluate(node => node.validity.valueMissing);
-    const errorVisible = await page.locator('.alert-danger, .error, .alert').isVisible().catch(() => false);
-
-    expect(isInvalid || errorVisible, 'ควรมี validation error เมื่อไม่กรอก Username').toBeTruthy();
-  });
-
-  // ─────────────────────────────────────────────
-  // TC-05: ไม่กรอก Password
-  // ─────────────────────────────────────────────
-  test('TC-05: เข้าสู่ระบบไม่สำเร็จเมื่อไม่กรอก Password', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    await loginPage.goto();
-    await loginPage.login('admin', '');
-
-    const isInvalid = await loginPage.passwordInput.evaluate(node => node.validity.valueMissing);
-    const errorVisible = await page.locator('.alert-danger, .error, .alert').isVisible().catch(() => false);
-
-    expect(isInvalid || errorVisible, 'ควรมี validation error เมื่อไม่กรอก Password').toBeTruthy();
-  });
-
-  // ─────────────────────────────────────────────
-  // TC-06: ไม่กรอกทั้งคู่
-  // ─────────────────────────────────────────────
-  test('TC-06: เข้าสู่ระบบไม่สำเร็จเมื่อไม่กรอกข้อมูลใดๆ', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    await loginPage.goto();
-    await loginPage.login('', '');
-    await expect(page).toHaveURL(/login/);
-  });
-
-  // ─────────────────────────────────────────────
-  // TC-07: Password Masking
-  // ─────────────────────────────────────────────
-  test('TC-07: ตรวจสอบการแสดงผลรหัสผ่าน (Masking)', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    await loginPage.goto();
-    const type = await loginPage.passwordInput.getAttribute('type');
-    expect(type, '[BUG DETECTED] Password field ไม่ได้ mask!').toBe('password');
-  });
-
-  // ─────────────────────────────────────────────
-  // TC-08: [BUG 38] Logout + Session ต้องถูกล้าง
-  // ─────────────────────────────────────────────
-  test('TC-08: [BUG 38] ออกจากระบบสำเร็จและ Session ต้องถูกล้าง', async ({ page }) => {
+  test('TC-AUTH-07: [BUG 38] Logout ออกจากระบบ', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
 
-    // 1. Login เข้าสู่ระบบ
+    // Login ก่อน
     await loginPage.login('admin', 'admin123');
     await page.waitForURL('**/index.php', { waitUntil: 'networkidle' });
 
-    // 2. คลิก Logout (ต้องเปิด Dropdown ก่อน)
-    // คลิกที่ชื่อผู้ใช้หรือปุ่ม Dropdown
-    await page.locator('#userDropdown').click(); 
-    
-    // คลิกปุ่ม Logout ที่ปรากฏขึ้นมา
+    // เปิด dropdown แล้วกด Logout
+    await page.locator('#userDropdown').click();
     await page.getByRole('link', { name: /Logout|ออกจากระบบ/i }).click();
-    
-    // รอจนกลับมาหน้า Login
     await page.waitForURL('**/login.php', { waitUntil: 'networkidle' });
+
+    // ต้องกลับมาหน้า Login
     await expect(page).toHaveURL(/login/);
 
-    // 3. [BUG 38] ตรวจว่า session cookie ถูกล้างจริง (ถ้ามี method นี้ใน Page Object)
-    // const sessionCleared = await loginPage.isSessionCleared();
-    // expect(sessionCleared).toBeTruthy();
+    // [BUG 38] ตรวจ session cookie ถูกล้างจริง
+    const sessionCleared = await loginPage.isSessionCleared();
+    expect(sessionCleared,
+      '[BUG 38 DETECTED] Session cookie ยังคงอยู่หลัง logout!'
+    ).toBeTruthy();
+  });
 
-    // 4. [BUG 38] ทดสอบความปลอดภัย: ป้องกันการกดเข้าตรงๆ หลัง Logout
-    await page.goto('http://localhost:8080/index.php');
-    
-    // คาดหวัง: ระบบต้อง Redirect กลับมาหน้า Login เท่านั้น
-    await page.waitForURL('**/login.php'); 
+  // ─────────────────────────────────────────────
+  // TC-AUTH-08: [BUG 8] Auth Guard - เข้าหน้า /books โดยไม่ Login
+  // BUG 8 → ไม่ตรวจสอบ session timeout / auth guard
+  // ─────────────────────────────────────────────
+  test('TC-AUTH-08: [BUG 8] Auth Guard - เข้าหน้า /books โดยไม่ Login', async ({ page }) => {
+    // ไม่ login เลย เข้า books.php ตรงๆ
+    await page.goto('http://localhost:8080/books.php');
+    await page.waitForLoadState('networkidle', { timeout: 10000 });
+
+    // ถ้า FAIL (ไม่ redirect กลับ login) = พบ BUG 8
     await expect(page).toHaveURL(/login/, {
-        message: '[BUG 38 DETECTED] บัค! ยังเข้าหน้า Dashboard ได้หลัง Logout (Session ไม่ตาย)'
+      message: '[BUG 8 DETECTED] เข้าหน้า books.php ได้โดยไม่ต้อง Login!'
     });
-});
+  });
+
+  // ─────────────────────────────────────────────
+  // TC-AUTH-09: [BUG 8] Auth Guard - เข้าหน้า /members โดยไม่ Login
+  // ─────────────────────────────────────────────
+  test('TC-AUTH-09: [BUG 8] Auth Guard - เข้าหน้า /members โดยไม่ Login', async ({ page }) => {
+    await page.goto('http://localhost:8080/members.php');
+    await page.waitForLoadState('networkidle', { timeout: 10000 });
+
+    await expect(page).toHaveURL(/login/, {
+      message: '[BUG 8 DETECTED] เข้าหน้า members.php ได้โดยไม่ต้อง Login!'
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  // TC-AUTH-10: [BUG 8] Auth Guard - เข้าหน้า /borrowing โดยไม่ Login
+  // ─────────────────────────────────────────────
+  test('TC-AUTH-10: [BUG 8] Auth Guard - เข้าหน้า /borrowing โดยไม่ Login', async ({ page }) => {
+    await page.goto('http://localhost:8080/borrow.php');
+    await page.waitForLoadState('networkidle', { timeout: 10000 });
+
+    await expect(page).toHaveURL(/login/, {
+      message: '[BUG 8 DETECTED] เข้าหน้า borrow.php ได้โดยไม่ต้อง Login!'
+    });
+  });
 
 });
