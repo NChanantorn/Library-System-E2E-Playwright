@@ -1,70 +1,70 @@
-﻿Test Cases - User Experience and End-to-End Testing - ทดสอบ UI/UX อย่างองค์รวม
-โครงการ: E2E Testing | วันที่: 4 เมษายน 2026 | เวอร์ชัน: 1.0 | รวม: 50 Test Cases,,,,,,
-TC-ID,โมดูล,หัวข้อการทดสอบ,ลำดับความสำคัญ,เงื่อนไขก่อน,ขั้นตอน,ผลที่คาดหวัง
+﻿Test Cases - Library Management System v2,,,,,,,,,
+โครงการ: E2E Testing | วันที่: 4 เมษายน 2026 | เวอร์ชัน: 1.0 | รวม: 56 Test Cases,,,,,,,,,
+TC-ID,โมดูล,หัวข้อการทดสอบ,ลำดับความสำคัญ,เงื่อนไขก่อน,ขั้นตอน,ผลที่คาดหวัง,ผลจริง,สถานะ,หมายเหตุ
 TC-AUTH-01,Authentication,Login ด้วย Username/Password ที่ถูกต้อง,Critical,มีบัญชี admin/admin123 ในระบบ,"1. เปิด http://localhost:8080
 2. กรอก username: admin
 3. กรอก password: admin123
 4. กดปุ่ม Login","- เข้าสู่ระบบสำเร็จ
 - เปลี่ยนไปหน้า Dashboard
-- แสดง 'System Administrator' มุมขวาบน"
+- แสดง 'System Administrator' มุมขวาบน",,⬜ รอทดสอบ,
 TC-AUTH-02,Authentication,Login ด้วย Password ที่ผิด,High,มีบัญชี admin ในระบบ,"1. เปิด http://localhost:8080
 2. กรอก username: admin
 3. กรอก password: wrongpass
 4. กดปุ่ม Login","- Login ไม่สำเร็จ
 - แสดง error message
-- ยังอยู่หน้า Login"
+- ยังอยู่หน้า Login",,⬜ รอทดสอบ,
 TC-AUTH-03,Authentication,Login ด้วย Username ที่ไม่มีในระบบ,High,ไม่มีบัญชี nobody ในระบบ,"1. เปิด http://localhost:8080
 2. กรอก username: nobody
 3. กรอก password: admin123
 4. กดปุ่ม Login","- Login ไม่สำเร็จ
 - แสดง error message
-- ยังอยู่หน้า Login"
+- ยังอยู่หน้า Login",,⬜ รอทดสอบ,
 TC-AUTH-04,Authentication,Login ปล่อยช่องว่างทั้งหมด,High,อยู่ที่หน้า Login,"1. เปิด http://localhost:8080
 2. ไม่กรอกอะไรเลย
 3. กดปุ่ม Login","- แสดง error validation
 - ไม่สามารถ Login ได้
-- ยังอยู่หน้า Login"
+- ยังอยู่หน้า Login",,⬜ รอทดสอบ,
 TC-AUTH-05,Authentication,Login ด้วย librarian account,Medium,มีบัญชี librarian/lib123 ในระบบ,"1. เปิด http://localhost:8080
 2. กรอก username: librarian
 3. กรอก password: lib123
 4. กดปุ่ม Login","- เข้าสู่ระบบสำเร็จ
-- เข้าถึง Dashboard ได้"
+- เข้าถึง Dashboard ได้",,⬜ รอทดสอบ,
 TC-AUTH-06,Authentication,SQL Injection ใน Login form,High,อยู่ที่หน้า Login,"1. กรอก username: ' OR '1'='1
 2. กรอก password: ' OR '1'='1
 3. กดปุ่ม Login","- Login ไม่สำเร็จ
 - ระบบป้องกัน SQL Injection ได้
-- ไม่เข้าสู่ระบบโดยไม่ได้รับอนุญาต"
+- ไม่เข้าสู่ระบบโดยไม่ได้รับอนุญาต",,⬜ รอทดสอบ,
 TC-AUTH-07,Authentication,Logout ออกจากระบบ,Critical,Login เข้าระบบแล้ว,"1. คลิกปุ่ม Logout มุมขวาบน
 2. ดูผลลัพธ์","- Logout สำเร็จ
 - กลับไปหน้า Login
-- Session ถูกยกเลิก"
+- Session ถูกยกเลิก",,⬜ รอทดสอบ,
 TC-AUTH-08,Authentication,Auth Guard - เข้าหน้า /books โดยไม่ Login,High,ยังไม่ได้ Login,"1. พิมพ์ URL: http://localhost:8080/books โดยตรง
 2. ดูว่าระบบทำอะไร","- Redirect กลับหน้า Login อัตโนมัติ
-- ไม่สามารถเข้าหน้า books ได้"
-TC-AUTH-09,Authentication,Auth Guard - เข้าหน้า /members โดยไม่ Login,High,ยังไม่ได้ Login,1. พิมพ์ URL: http://localhost:8080/members โดยตรง,- Redirect กลับหน้า Login อัตโนมัติ
-TC-AUTH-10,Authentication,Auth Guard - เข้าหน้า /borrowing โดยไม่ Login,High,ยังไม่ได้ Login,1. พิมพ์ URL: http://localhost:8080/borrowing โดยตรง,- Redirect กลับหน้า Login อัตโนมัติ
+- ไม่สามารถเข้าหน้า books ได้",,⬜ รอทดสอบ,
+TC-AUTH-09,Authentication,Auth Guard - เข้าหน้า /members โดยไม่ Login,High,ยังไม่ได้ Login,1. พิมพ์ URL: http://localhost:8080/members โดยตรง,- Redirect กลับหน้า Login อัตโนมัติ,,⬜ รอทดสอบ,
+TC-AUTH-10,Authentication,Auth Guard - เข้าหน้า /borrowing โดยไม่ Login,High,ยังไม่ได้ Login,1. พิมพ์ URL: http://localhost:8080/borrowing โดยตรง,- Redirect กลับหน้า Login อัตโนมัติ,,⬜ รอทดสอบ,
 TC-DASH-01,Dashboard,Dashboard แสดงสถิติครบถ้วน,Critical,Login เป็น admin แล้ว,"1. Login ด้วย admin/admin123
 2. ดูที่หน้า Dashboard","- แสดง Total Books
 - แสดง Available Books
 - แสดง Active Members
 - แสดง Borrowed Books
-- ตัวเลขสมเหตุสมผล"
+- ตัวเลขสมเหตุสมผล",,⬜ รอทดสอบ,
 TC-DASH-02,Dashboard,Dashboard ตัวเลข Available ต้องน้อยกว่า Total,High,Login เป็น admin แล้ว,"1. Login ด้วย admin/admin123
 2. ดูตัวเลข Total Books และ Available Books","- Available Books <= Total Books
-- Borrowed Books <= Total Books"
+- Borrowed Books <= Total Books",,⬜ รอทดสอบ,
 TC-DASH-03,Dashboard,Navigation ไปหน้าต่างๆ จาก Dashboard,Critical,อยู่ที่หน้า Dashboard,"1. คลิก Books
 2. ตรวจสอบว่าไปหน้า Books
 3. กลับมา คลิก Members
 4. คลิก Borrowing
 5. คลิก Reports","- ทุกการ์ดพาไปหน้าที่ถูกต้อง
-- ไม่มี 404 error"
+- ไม่มี 404 error",,⬜ รอทดสอบ,
 TC-BOOK-01,Books,เปิดหน้า Books Management,Critical,Login เป็น admin แล้ว,"1. คลิก Books ที่เมนู
 2. รอหน้าโหลด","- หน้าโหลดสำเร็จ
 - แสดงรายการหนังสือ
-- มีปุ่ม + Add Book"
+- มีปุ่ม + Add Book",,⬜ รอทดสอบ,
 TC-BOOK-02,Books,แสดงรายการหนังสือทั้งหมด,High,มีหนังสือในระบบ,"1. ไปหน้า Books
-2. ดูตารางรายการหนังสือ","- แสดงข้อมูลครบ: ID, Title, Author, Category, Total, Available, Location
-- มีปุ่ม Edit, View
+2. ดูตารางรายการหนังสือ","- แสดงข้อมูลครบ: ID, Title, Author, ISBN, Total Copies, Available
+- มีปุ่ม Edit, Delete",,⬜ รอทดสอบ,
 TC-BOOK-03,Books,เพิ่มหนังสือใหม่ด้วยข้อมูลครบถ้วน,Critical,อยู่ที่หน้า Books,"1. คลิก + Add Book
 2. กรอก Title: 'Test Book'
 3. กรอก Author: 'Test Author'
@@ -72,114 +72,149 @@ TC-BOOK-03,Books,เพิ่มหนังสือใหม่ด้วยข
 5. กรอก Total Copies: 3
 6. คลิก Save","- หนังสือถูกเพิ่มสำเร็จ
 - ขึ้น 'Book added successfully'
-- หนังสือใหม่ปรากฏในรายการ"
+- หนังสือใหม่ปรากฏในรายการ",,⬜ รอทดสอบ,
 TC-BOOK-04,Books,เพิ่มหนังสือโดยไม่กรอกข้อมูลที่จำเป็น,High,อยู่ที่หน้า Add Book,"1. คลิก + Add Book
 2. ไม่กรอกอะไรเลย
 3. คลิก Save","- แสดง validation error
 - ไม่บันทึกข้อมูล
-- ระบุ field ที่จำเป็นต้องกรอก"
+- ระบุ field ที่จำเป็นต้องกรอก",,⬜ รอทดสอบ,
 TC-BOOK-05,Books,แก้ไขข้อมูลหนังสือ,Critical,มีหนังสือในระบบ,"1. คลิก Edit ของหนังสือเล่มใดก็ได้
 2. แก้ไข Title
 3. คลิก Update Book","- ข้อมูลเดิมโหลดมาใน form
 - บันทึกสำเร็จ
-- ข้อมูลใหม่แสดงในรายการ"
+- ข้อมูลใหม่แสดงในรายการ",,⬜ รอทดสอบ,
 TC-BOOK-06,Books,ลบหนังสือออกจากระบบ,High,มีหนังสือที่ไม่ถูกยืมในระบบ,"1. คลิก Delete ของหนังสือ
 2. กด OK ยืนยัน","- ขึ้น popup ยืนยันก่อนลบ
 - ลบสำเร็จ
-- หนังสือหายไปจากรายการ"
+- หนังสือหายไปจากรายการ",,⬜ รอทดสอบ,
 TC-BOOK-07,Books,ค้นหาหนังสือด้วยชื่อ,Critical,มีหนังสือในระบบ,"1. พิมพ์ชื่อหนังสือในช่อง Search
 2. คลิก Search","- แสดงเฉพาะหนังสือที่ตรงกับคำค้นหา
-- ผลลัพธ์ถูกต้อง"
+- ผลลัพธ์ถูกต้อง",,⬜ รอทดสอบ,
 TC-BOOK-08,Books,ค้นหาหนังสือที่ไม่มีในระบบ,Medium,อยู่ที่หน้า Books,"1. พิมพ์ 'ZZZZZZ' ในช่อง Search
 2. คลิก Search","- แสดง 'No books found'
-- ไม่มี error"
+- ไม่มี error",,⬜ รอทดสอบ,
 TC-BOOK-09,Books,ค้นหาด้วยชื่อผู้แต่ง,Medium,มีหนังสือในระบบ,"1. พิมพ์ชื่อผู้แต่งในช่อง Search
-2. คลิก Search",- แสดงหนังสือของผู้แต่งนั้น
+2. คลิก Search",- แสดงหนังสือของผู้แต่งนั้น,,⬜ รอทดสอบ,
 TC-BOOK-10,Books,ค้นหาด้วย ISBN,Medium,มีหนังสือในระบบ,"1. พิมพ์ ISBN ในช่อง Search
-2. คลิก Search",- แสดงหนังสือที่ตรงกับ ISBN
+2. คลิก Search",- แสดงหนังสือที่ตรงกับ ISBN,,⬜ รอทดสอบ,
+TC-BOOK-11,Books,ระบบปฏิเสธ ISBN ที่ซ้ำกับที่มีอยู่แล้ว,High,มีหนังสือที่ใช้ ISBN '978-616-567-890-1' อยู่แล้ว,"1. คลิก + Add Book
+2. กรอก Title: 'New Book'
+3. กรอก Author: 'Test'
+4. กรอก ISBN: '978-616-567-890-1' (ซ้ำ)
+5. กรอก Total Copies: 1
+6. คลิก Save","- ระบบปฏิเสธการบันทึก
+- แสดง error 'ISBN already exists'
+- ไม่เพิ่มหนังสือในรายการ",,⬜ รอทดสอบ,
 TC-MEM-01,Members,เปิดหน้า Members Management,Critical,Login เป็น admin แล้ว,"1. คลิก Members ที่เมนู
 2. รอหน้าโหลด","- หน้าโหลดสำเร็จ
 - แสดงรายการสมาชิก
-- มีปุ่ม + Add Member"
+- มีปุ่ม + Add Member",,⬜ รอทดสอบ,
 TC-MEM-02,Members,แสดงรายการสมาชิกทั้งหมด,High,มีสมาชิกในระบบ,"1. ไปหน้า Members
-2. ดูตารางรายการสมาชิก","- แสดงข้อมูลครบ: ID, Full Name, Email, Phone, Status, Max Books"
+2. ดูตารางรายการสมาชิก","- แสดงข้อมูลครบ: ID, Full Name, Email, Phone, Status, Max Books",,⬜ รอทดสอบ,
 TC-MEM-03,Members,เพิ่มสมาชิกใหม่ด้วยข้อมูลครบถ้วน,Critical,อยู่ที่หน้า Members,"1. คลิก + Add Member
 2. กรอก Member Code: M999
 3. กรอก Full Name: Test Member
 4. เลือก Member Type: Student
 5. คลิก Save","- สมาชิกถูกเพิ่มสำเร็จ
-- ปรากฏในรายการ"
+- ปรากฏในรายการ",,⬜ รอทดสอบ,
 TC-MEM-04,Members,เพิ่มสมาชิกด้วย Member Code ที่ซ้ำ,High,มีสมาชิก M001 อยู่แล้ว,"1. คลิก + Add Member
 2. กรอก Member Code: M001
 3. กรอกข้อมูลอื่นครบ
 4. คลิก Save","- แสดง error 'Member code already exists'
-- ไม่บันทึกข้อมูล"
+- ไม่บันทึกข้อมูล",,⬜ รอทดสอบ,
 TC-MEM-05,Members,แก้ไขข้อมูลสมาชิก,High,มีสมาชิกในระบบ,"1. คลิก Edit ของสมาชิก
 2. แก้ไขข้อมูล
 3. คลิก Save","- ข้อมูลเดิมโหลดมาใน form
-- บันทึกสำเร็จ"
+- บันทึกสำเร็จ",,⬜ รอทดสอบ,
 TC-MEM-06,Members,ลบสมาชิก,Medium,มีสมาชิกที่ไม่มีการยืมค้างในระบบ,"1. คลิก Delete ของสมาชิก
 2. ยืนยัน","- ลบสำเร็จ
-- สมาชิกหายไปจากรายการ"
+- สมาชิกหายไปจากรายการ",,⬜ รอทดสอบ,
 TC-MEM-07,Members,เพิ่มสมาชิกโดยไม่กรอกข้อมูลที่จำเป็น,High,อยู่ที่หน้า Add Member,"1. คลิก + Add Member
 2. ไม่กรอกอะไรเลย
 3. คลิก Save","- แสดง validation error
-- ระบุ field ที่จำเป็น"
+- ระบุ field ที่จำเป็น",,⬜ รอทดสอบ,
+TC-MEM-08,Members,ระบบปฏิเสธ Email ที่ผิดรูปแบบ,High,อยู่ที่หน้า Add Member,"1. คลิก + Add Member
+2. กรอก Member Code: M100
+3. กรอก Full Name: Test
+4. กรอก Email: 'notanemail' (ผิดรูปแบบ)
+5. เลือก Member Type: Student
+6. คลิก Save","- ระบบปฏิเสธการบันทึก
+- แสดง error 'รูปแบบ Email ไม่ถูกต้อง'
+- ไม่เพิ่มสมาชิก",,⬜ รอทดสอบ,
+TC-MEM-09,Members,Teacher ต้องได้ Max Books = 5 ไม่ใช่ 3,High,อยู่ที่หน้า Add Member,"1. คลิก + Add Member
+2. กรอก Member Code: M101
+3. กรอก Full Name: อาจารย์ทดสอบ
+4. เลือก Member Type: Teacher
+5. ดูค่า Max Books ที่ระบบกำหนดให้
+6. คลิก Save","- Max Books ของ Teacher = 5
+- ไม่ใช่ 3 (ค่า default ของ Student)
+- บันทึกสำเร็จพร้อม Max Books = 5",,⬜ รอทดสอบ,
 TC-BOR-01,Borrowing,เปิดหน้า Borrowing Management,Critical,Login เป็น admin แล้ว,"1. คลิก Borrowing ที่เมนู
 2. รอหน้าโหลด","- หน้าโหลดสำเร็จ
 - แสดงรายการการยืม
-- มีปุ่ม + New Borrow"
+- มีปุ่ม + New Borrow",,⬜ รอทดสอบ,
 TC-BOR-02,Borrowing,ยืมหนังสือที่มีอยู่ในระบบ,Critical,มีหนังสือ Available และสมาชิกในระบบ,"1. คลิก + New Borrow
 2. เลือก Member
 3. เลือก Book ที่ Available > 0
 4. คลิก Save","- ยืมสำเร็จ
 - แสดงในรายการ Borrowing
-- Status = Borrowed"
+- Status = Borrowed",,⬜ รอทดสอบ,
 TC-BOR-03,Borrowing,คืนหนังสือ,Critical,มีรายการยืมที่ยังไม่คืน,"1. หารายการที่ Status = Borrowed
 2. คลิกปุ่ม Return
 3. กด OK ยืนยัน","- คืนสำเร็จ
 - Status เปลี่ยนเป็น Returned
-- Return Date แสดงวันที่คืน"
+- Return Date แสดงวันที่คืน",,⬜ รอทดสอบ,
 TC-BOR-04,Borrowing,ดูรายละเอียดการยืม (Details),Medium,มีรายการยืมในระบบ,"1. คลิกปุ่ม Details ของรายการยืม
 2. ดูข้อมูล","- แสดงรายละเอียดครบถ้วน
-- ข้อมูลถูกต้อง"
+- ข้อมูลถูกต้อง",,⬜ รอทดสอบ,
 TC-BOR-05,Borrowing,ตรวจสอบ Status ของหนังสือที่เกินกำหนด,High,มีรายการยืมที่เลย Due Date แล้ว,"1. ดูรายการที่ Due Date ผ่านมาแล้ว
 2. ตรวจสอบ Status","- Status ควรเป็น Overdue
-- ไม่ใช่ Borrowed"
+- ไม่ใช่ Borrowed",,⬜ รอทดสอบ,
 TC-BOR-06,Borrowing,ตรวจสอบ Due Date ที่สร้างขึ้น,Medium,ยืมหนังสือสำเร็จ,"1. ยืมหนังสือ
 2. ดู Due Date ที่แสดง","- Due Date = วันที่ยืม + 14 วัน
-- วันที่ถูกต้อง"
+- วันที่ถูกต้อง",,⬜ รอทดสอบ,
 TC-BOR-07,Borrowing,ป้องกันการยืมหนังสือที่ Available = 0,High,มีหนังสือที่ Available = 0,"1. ลอง New Borrow
 2. เลือกหนังสือที่ Available = 0","- ระบบป้องกันไม่ให้ยืมได้
-- แสดง error message"
+- แสดง error message",,⬜ รอทดสอบ,
 TC-REP-01,Reports,เปิดหน้า Reports,Critical,Login เป็น admin แล้ว,"1. คลิก Reports ที่เมนู
 2. รอหน้าโหลด","- หน้าโหลดสำเร็จ
-- แสดงข้อมูล Overdue Books"
+- แสดงข้อมูล Overdue Books",,⬜ รอทดสอบ,
 TC-REP-02,Reports,แสดงรายการหนังสือเกินกำหนด,High,มีรายการยืมที่เกิน Due Date,"1. ไปหน้า Reports
 2. ดูส่วน Overdue Books","- แสดงรายการที่เกินกำหนด
-- แสดง Days Overdue และ Fine ถูกต้อง"
+- แสดง Days Overdue และ Fine ถูกต้อง",,⬜ รอทดสอบ,
 TC-REP-03,Reports,ตรวจสอบการคำนวณค่าปรับ,High,มีรายการ Overdue,"1. ดูรายการ Overdue
 2. ตรวจสอบ: Days Overdue x 10 = Fine","- Fine = Days Overdue x 10 baht
-- คำนวณถูกต้อง"
+- คำนวณถูกต้อง",,⬜ รอทดสอบ,
+TC-REP-04,Reports,Overdue ต้องแสดงทุกรายการที่เกินกำหนด ไม่ใช่แค่บางส่วน,Critical,มีรายการยืมที่เกิน Due Date หลายรายการ,"1. ไปหน้า Reports
+2. ดูส่วน Overdue Books
+3. นับจำนวนรายการที่แสดง
+4. เปรียบเทียบกับหน้า Borrowing ที่ Status = Borrowed และ Due Date ผ่านแล้ว","- จำนวนรายการใน Reports = จำนวนรายการ Overdue จริงๆ ในหน้า Borrowing
+- ไม่มีรายการที่ตกหล่น
+- แสดงครบทุก record",,⬜ รอทดสอบ,
+TC-REP-05,Reports,Total Copies ต้องไม่ติดลบในรายงาน,High,มีหนังสือในระบบที่ถูกยืม,"1. ไปหน้า Reports
+2. ดูข้อมูล Books
+3. ตรวจสอบ Total Copies และ Available ของทุกเล่ม","- Total Copies ต้องมากกว่า 0 เสมอ
+- Available Copies ต้องไม่ติดลบ (>= 0)
+- Available <= Total Copies",,⬜ รอทดสอบ,
 TC-CROSS-01,Cross-Browser,ทดสอบบน Chrome,High,ติดตั้ง Chrome แล้ว,"1. เปิดระบบด้วย Chrome
 2. Login
-3. ทดสอบฟีเจอร์หลัก",- ทุกฟีเจอร์ทำงานได้บน Chrome
+3. ทดสอบฟีเจอร์หลัก",- ทุกฟีเจอร์ทำงานได้บน Chrome,,⬜ รอทดสอบ,
 TC-CROSS-02,Cross-Browser,ทดสอบบน Firefox,High,ติดตั้ง Firefox แล้ว,"1. เปิดระบบด้วย Firefox
 2. Login
-3. ทดสอบฟีเจอร์หลัก",- ทุกฟีเจอร์ทำงานได้บน Firefox
+3. ทดสอบฟีเจอร์หลัก",- ทุกฟีเจอร์ทำงานได้บน Firefox,,⬜ รอทดสอบ,
 TC-CROSS-03,Cross-Browser,ทดสอบบน Edge,Medium,ติดตั้ง Edge แล้ว,"1. เปิดระบบด้วย Edge
 2. Login
-3. ทดสอบฟีเจอร์หลัก",- ทุกฟีเจอร์ทำงานได้บน Edge
+3. ทดสอบฟีเจอร์หลัก",- ทุกฟีเจอร์ทำงานได้บน Edge,,⬜ รอทดสอบ,
 TC-VIS-01,Visual,หน้า Login แสดงผลถูกต้อง,Medium,เปิดระบบแล้ว,"1. เปิด http://localhost:8080
 2. ดู UI","- Form Login แสดงครบ
-- ปุ่ม Login แสดงถูกต้อง"
+- ปุ่ม Login แสดงถูกต้อง",,⬜ รอทดสอบ,
 TC-VIS-02,Visual,หน้า Dashboard แสดงผลถูกต้อง,Medium,Login แล้ว,"1. ดูหน้า Dashboard
 2. ตรวจสอบ Layout","- 4 การ์ดสถิติแสดงครบ
-- 4 เมนูนำทางแสดงครบ"
+- 4 เมนูนำทางแสดงครบ",,⬜ รอทดสอบ,
 TC-VIS-03,Visual,Responsive Design บนหน้าจอเล็ก,Low,Login แล้ว,"1. กด F12
 2. เปลี่ยน device เป็น mobile
 3. ดูทุกหน้า","- หน้าแสดงผลได้บนจอมือถือ
-- ไม่มีเนื้อหาเกินหน้าจอ"
+- ไม่มีเนื้อหาเกินหน้าจอ",,⬜ รอทดสอบ,
 TC-UJ-01,User Journey,การยืมหนังสือ End-to-End,Critical,Login เป็น admin แล้ว มีหนังสือและสมาชิก,"1. Login
 2. ไปหน้า Borrowing
 3. คลิก + New Borrow
@@ -187,21 +222,21 @@ TC-UJ-01,User Journey,การยืมหนังสือ End-to-End,Critica
 5. บันทึก
 6. ดูรายการที่ Borrowed
 7. Logout","- ยืมสำเร็จครบทุกขั้น
-- รายการแสดงถูกต้อง"
+- รายการแสดงถูกต้อง",,⬜ รอทดสอบ,
 TC-UJ-02,User Journey,การคืนหนังสือ End-to-End,Critical,มีรายการยืมที่ยังไม่คืน,"1. Login
 2. ไปหน้า Borrowing
 3. คลิก Return
 4. ยืนยัน
-5. ตรวจสอบ Status = Returned",- คืนสำเร็จครบทุกขั้น
+5. ตรวจสอบ Status = Returned",- คืนสำเร็จครบทุกขั้น,,⬜ รอทดสอบ,
 TC-UJ-03,User Journey,การจัดการหนังสือ End-to-End,High,Login เป็น admin แล้ว,"1. Login
 2. เพิ่มหนังสือใหม่
 3. แก้ไขหนังสือ
-4. ลบหนังสือ",- CRUD ทุกขั้นทำงานได้
+4. ลบหนังสือ",- CRUD ทุกขั้นทำงานได้,,⬜ รอทดสอบ,
 TC-UJ-04,User Journey,การจัดการสมาชิก End-to-End,High,Login เป็น admin แล้ว,"1. Login
 2. เพิ่มสมาชิกใหม่
 3. แก้ไขสมาชิก
-4. ลบสมาชิก",- CRUD ทุกขั้นทำงานได้
+4. ลบสมาชิก",- CRUD ทุกขั้นทำงานได้,,⬜ รอทดสอบ,
 TC-UJ-05,User Journey,ดูรายงาน Overdue End-to-End,High,มีรายการ Overdue,"1. Login
 2. ไปหน้า Reports
 3. ดู Overdue Books
-4. ตรวจสอบข้อมูล",- ข้อมูลแสดงถูกต้องครบถ้วน
+4. ตรวจสอบข้อมูล",- ข้อมูลแสดงถูกต้องครบถ้วน,,⬜ รอทดสอบ,
