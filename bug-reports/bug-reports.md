@@ -408,8 +408,8 @@ Feature: Members / Delete Member Functionality
 
 Bug ID: BUG-010  
 ชื่อ: Borrowing - ไม่มี Borrowing History/Details Page  
-Severity: **CRITICAL**  
-Priority: **CRITICAL**  
+Severity: Critical
+Priority: Medium
 TC-ID: TC-BOR-04  
 Feature: Borrowing / Borrowing History & Details
 
@@ -433,14 +433,12 @@ Feature: Borrowing / Borrowing History & Details
   - Fine amount (ถ้า overdue)
 - ปุ่ม Details/View ในหน้า Borrow หรือ Return สำหรับแต่ละ record
 
-### จริง:
+### ผลจริง:
 
-- **ไม่มี Borrowing History page ในระบบ!**
+- ไม่มี Borrowing History page ในระบบ
 - Borrow page มีเฉพาะ "Borrow Form" เพื่อสร้างการยืมใหม่
 - ไม่มี Details button/link เพื่อดูรายละเอียด
-- ไม่มีวิธีเพื่อดูรายการยืมที่เก่าแล้ว
 - ไม่มี history tracking page
-- ไม่สามารถ view borrowing records ได้ (TC-BOR-04 fail)
 
 ### สาเหตุ:
 
@@ -450,26 +448,64 @@ Feature: Borrowing / Borrowing History & Details
 - Similar to BUG-005 (Missing Edit page)
 - Incomplete feature implementation
 
-### ผลกระทบ:
-
-- **Functionality:** ไม่สามารถดูรายการยืมที่เก่าแล้ว
-- **Data Tracking:** ไม่มีวิธีติดตามการยืม-คืน
-- **Fine Management:** ไม่สามารถดู/verify fine amount
-- **Business Logic:** ขาดการจัดการ borrowing records
-- **Severity:** CRITICAL - Core feature missing
-- **Test Case:** TC-BOR-04 ไม่สามารถ execute
-
 ### Pattern:
 
 - BUG-005: Missing Book Edit page
 - BUG-010: Missing Borrowing History page
 - Pattern: Major feature pages missing from required modules
 
+### Attachment: BUG-010.png
+
+---
+
+## BUG-011
+
+Bug ID: BUG-011  
+ชื่อ: Due Date คำนวณไม่ถูกต้องสำหรับผู้ยืมประเภท Teacher  
+Severity: High  
+Priority: High  
+TC-ID: TC-BOR-06  
+Feature: Borrowing / Due Date Calculation
+
+### ขั้นตอนการทำซ้ำ:
+
+1. Login เข้าระบบด้วย admin/admin123
+2. Go to Return page (localhost:8080/return.php)
+3. ดูรายการหนังสือที่ยังยืมอยู่
+4. ตรวจสอบ Due Date ของสมาชิกประเภท Teacher (เช่น ดร.วิชัย อาจารย์)
+
+### คาดหวัง:
+
+- Teacher มี Due Date = Borrow Date + 30 days
+- Students มี Due Date = Borrow Date + 14 days
+- Public มี Due Date = Borrow Date + 7 days
+- วันที่แสดงในระบบต้องถูกต้องตามบทบาท
+
+### ผลจริง:
+
+- ดร.วิชัย อาจารย์ (Teacher) ยืมวันที่ 2024-10-25
+- Due Date ในระบบแสดงเป็น 2024-11-08
+- เป็นเวลา 14 วันเท่านั้น ไม่ใช่ 30 วันตามกฎ Teacher
+- Due Date คำนวณผิดสำหรับผู้ยืมประเภท Teacher
+
+### สาเหตุ:
+
+- Logic การคำนวณ Due Date ไม่แยกตาม member type
+- อาจมี default 14 วัน สำหรับทุกประเภท
+- Missing business rule branch for Teacher / Public
+
+### ผลกระทบ:
+
+- **Functionality:** Due Date ไม่สอดคล้องกับกฎการยืม
+- **Business Rules:** Teacher ได้รับช่วงเวลายืมผิด
+- **User Trust:** ผู้ใช้สับสนเมื่อระบบไม่ตาม policy
+- **Severity:** High - คำนวณวันคืนผิดสำหรับกลุ่มผู้ใช้หนึ่ง
+
 ### Attachment: 
-- BUG-010-no-borrowing-history-page.png
+- BUG-011-due-date-wrong-teacher.png
 
 ### Status: 
-CRITICAL (ยืนยันแล้ว)
+New (ยืนยันแล้ว)
 
 ---
 
@@ -484,18 +520,19 @@ CRITICAL (ยืนยันแล้ว)
 **BUG-007:** No Duplicate Check + Fatal Error on Member Code - TC-MEM-04  
 **BUG-008:** Missing Action Buttons in Members Table - TC-MEM-05  
 **BUG-009:** Missing Delete Member Functionality - TC-MEM-06  
-**BUG-010:** 🔴 Missing Borrowing History/Details Page - TC-BOR-04
+**BUG-010:** 🔴 Missing Borrowing History/Details Page - TC-BOR-04  
+**BUG-011:** Due Date Calculation Wrong for Teacher - TC-BOR-06
 
 ---
 
 ## สถานะ
 
-**Total Bugs Found:** 10  
+**Total Bugs Found:** 11  
 **Target:** 20-30 bugs  
-**Remaining:** 10-20 bugs ต้องหา
+**Remaining:** 9-19 bugs ต้องหา
 
 **CRITICAL Bugs:** 3 (SQL Injection, Missing Edit Page, Missing History Page)  
-**HIGH Bugs:** 7 (PHP Errors x2, Dashboard Logic, Missing Delete x2, Duplicate Check, Missing Edit)
+**HIGH Bugs:** 8 (PHP Errors x2, Dashboard Logic, Missing Delete x2, Duplicate Check, Missing Edit, Due Date Calculation)
 
 ---
 
