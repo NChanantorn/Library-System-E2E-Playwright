@@ -43,7 +43,6 @@ test.describe('Reports Module (ตาม TestCase.csv)', () => {
 
     await expect(reportsPage.overdueTable).toBeVisible({ timeout: 5000 });
 
-    // ตรวจ column headers ครบ
     await expect(reportsPage.memberHeader.first()).toBeVisible({ timeout: 5000 });
     await expect(reportsPage.bookHeader.first()).toBeVisible({ timeout: 5000 });
     await expect(reportsPage.daysOverdueHeader.first()).toBeVisible({ timeout: 5000 });
@@ -61,8 +60,8 @@ test.describe('Reports Module (ตาม TestCase.csv)', () => {
     }
   });
 
-  // TC-REP-03: [BUG] ตรวจสอบการคำนวณค่าปรับ — Fine ผิด (ระบบคิด Days x 5 แทน Days x 10) (Fine = Days Overdue x 10)
-  test('TC-REP-03: [BUG] ตรวจสอบการคำนวณค่าปรับ — Fine ผิด (ระบบคิด Days x 5 แทน Days x 10)', async ({ page }) => {
+  // TC-REP-03: คำนวณ Days x 5 
+  test('TC-REP-03: คำนวณ Days x 5 ', async ({ page }) => {
     await reportsPage.goto();
 
     const rowCount = await reportsPage.getOverdueRecordsCount();
@@ -76,9 +75,7 @@ test.describe('Reports Module (ตาม TestCase.csv)', () => {
       const days = parseInt(record.daysOverdue.replace(/[^0-9]/g, ''), 10) || 0;
 
       if (days > 0 && !isCorrect) {
-        errors.push(
-          `"${record.book}": DaysOverdue=${days}, Fine=${actual}, Expected=${expected}`
-        );
+        errors.push(`"${record.book}": DaysOverdue=${days}, Fine=${actual}, Expected=${expected}`);
       }
       if (days < 0) {
         errors.push(`"${record.book}": DaysOverdue เป็นลบ (${days})`);
@@ -89,5 +86,75 @@ test.describe('Reports Module (ตาม TestCase.csv)', () => {
     }
 
     expect(errors, `พบการคำนวณค่าปรับผิด:\n${errors.join('\n')}`).toHaveLength(0);
+  });
+
+  // TC-REP-04: [BUG] Overdue ต้องแสดงทุกรายการที่เกินกำหนด ไม่ใช่แค่บางส่วน
+  // จาก snapshot: dashboard บอก 1 overdue แต่มีรายการ Borrowed ที่เลย due date หลายอัน
+  test('TC-REP-04: [BUG] Overdue Books ต้องแสดงครบทุกรายการที่เกินกำหนด', async ({ page }) => {
+    await reportsPage.goto();
+
+    const overdueCount = await reportsPage.getOverdueRecordsCount();
+
+    // นับรายการ Borrowed ที่เลย due date จริงใน return.php
+    await page.goto('http://localhost:8080/return.php');
+    await page.waitForLoadState('networkidle');
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const rows = page.locator('table tbody tr');
+    const count = await rows.count();
+    let actualOverdue = 0;
+
+    for (let i = 0; i < count; i++) {
+      const cells = rows.nth(i).locator('td');
+      const cellCount = await cells.count();
+      for (let c = 0; c < cellCount; c++) {
+        const text = (await cells.nth(c).innerText()).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+          const dueDate = new Date(text);
+          const statusText = await cells.nth(cellCount - 1).innerText();
+          if (dueDate < today && /Borrowed/i.test(statusText)) {
+            actualOverdue++;
+          }
+          break;
+        }
+      }
+    }
+
+    expect(overdueCount,
+      `[BUG DETECTED] Reports แสดง Overdue ${overdueCount} รายการ แต่จริงๆ มี ${actualOverdue} รายการ`
+    ).toBe(actualOverdue);
+  });
+
+  // TC-REP-05: [BUG] Books by Category Total Copies ต้องไม่ติดลบ
+  // จาก snapshot: General category มี Total Copies = -10
+  test('TC-REP-05: [BUG] Books by Category ต้องไม่มี Total Copies ติดลบ', async ({ page }) => {
+    await reportsPage.goto();
+
+    const categoryTable = page.locator('table').filter({
+      has: page.locator('th', { hasText: /Category/i })
+    });
+
+    await expect(categoryTable).toBeVisible({ timeout: 5000 });
+
+    const rows = categoryTable.locator('tbody tr');
+    const count = await rows.count();
+    const errors = [];
+
+    for (let i = 0; i < count; i++) {
+      const cells = rows.nth(i).locator('td');
+      const category = ((await cells.nth(0).textContent()) || '').trim();
+      const totalCopiesText = ((await cells.nth(2).textContent()) || '').trim();
+      const totalCopies = parseInt(totalCopiesText, 10);
+
+      if (totalCopies < 0) {
+        errors.push(`Category "${category}": Total Copies = ${totalCopies} ติดลบ`);
+      }
+    }
+
+    expect(errors,
+      `[BUG DETECTED] พบ Category ที่มี Total Copies ติดลบ:\n${errors.join('\n')}`
+    ).toHaveLength(0);
   });
 });

@@ -2,18 +2,18 @@
 class BooksPage {
   constructor(page) {
     this.page = page;
-    this.addBtnHeader = page.locator('button, a').filter({ hasText: /Add New Book|เพิ่มหนังสือใหม่|\+ Add Book/i });
+    this.addBtnHeader  = page.locator('button, a').filter({ hasText: /Add New Book/i });
     this.isbnInput     = page.locator('input[name*="isbn"], #isbn');
     this.titleInput    = page.locator('input[name*="title"], #title');
     this.authorInput   = page.locator('input[name*="author"], #author');
-    this.publisherInput= page.locator('input[name*="publisher"]');
-    this.yearInput     = page.locator('input[name*="year"]');
-    this.copiesInput   = page.locator('input[name*="copies"], input[name*="qty"]');
+    this.publisherInput= page.locator('input[name*="publisher"], #publisher');
+    this.yearInput     = page.locator('input[name*="year"], #year, input[name*="publication"]');
     this.categoryInput = page.locator('input[name*="category"], #category, select[name*="category"]');
-    this.locationInput = page.locator('input[name*="location"], #location');
-    this.submitBtn     = page.locator('button[type="submit"]').filter({ hasText: /Add Book|Save|บันทึก/i });
-    this.searchInput   = page.locator('input[name*="search"]');
-    this.searchBtn     = page.locator('button').filter({ hasText: /Search|ค้นหา/i });
+    this.copiesInput   = page.locator('input[name*="copies"], input[name*="total"], #copies');
+    this.locationInput = page.locator('input[name*="location"], input[name*="shelf"], #location');
+    this.submitBtn     = page.locator('button[type="submit"]').filter({ hasText: /Add Book/i });
+    this.searchInput   = page.locator('input[placeholder*="Search"], input[name*="search"]');
+    this.searchBtn     = page.locator('button').filter({ hasText: /^Search$/i });
     this.noResultText  = page.locator('text=/No books found|ไม่พบ/i');
     this.bookTable     = page.locator('table tbody');
   }
@@ -31,16 +31,18 @@ class BooksPage {
     await this.page.waitForTimeout(300);
   }
 
+  // กรอกข้อมูลครบทุก field ที่มองเห็น
   async fillAndSubmit(data) {
     await this.isbnInput.fill(String(data.isbn ?? ''));
     await this.titleInput.fill(String(data.title ?? ''));
     await this.authorInput.fill(String(data.author ?? ''));
-    if (data.publisher && await this.publisherInput.isVisible())
-      await this.publisherInput.fill(String(data.publisher));
-    if (data.year && await this.yearInput.isVisible())
-      await this.yearInput.fill(String(data.year));
-    await this.copiesInput.fill(String(data.copies ?? '1'));
-    // กรอก category ถ้ามี field (ป้องกัน SQL error จาก missing required field)
+
+    if (await this.publisherInput.isVisible().catch(() => false))
+      await this.publisherInput.fill(String(data.publisher ?? 'Test Publisher'));
+
+    if (await this.yearInput.isVisible().catch(() => false))
+      await this.yearInput.fill(String(data.year ?? '2024'));
+
     if (await this.categoryInput.isVisible().catch(() => false)) {
       const tag = await this.categoryInput.evaluate(n => n.tagName.toLowerCase());
       if (tag === 'select') {
@@ -49,8 +51,12 @@ class BooksPage {
         await this.categoryInput.fill(String(data.category ?? 'General'));
       }
     }
+
+    await this.copiesInput.fill(String(data.copies ?? '1'));
+
     if (await this.locationInput.isVisible().catch(() => false))
-      await this.locationInput.fill(String(data.location ?? 'A1'));
+      await this.locationInput.fill(String(data.location ?? 'A-101'));
+
     await this.submitBtn.first().waitFor({ state: 'visible', timeout: 5000 });
     await this.submitBtn.first().click();
     await this.page.waitForLoadState('networkidle', { timeout: 15000 });
@@ -68,7 +74,6 @@ class BooksPage {
     await this.page.waitForTimeout(800);
   }
 
-  // คืน locator ของแถวที่มีข้อความ text
   rowWith(text) {
     return this.page.locator('table tbody tr').filter({ hasText: text });
   }
