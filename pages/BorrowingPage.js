@@ -3,15 +3,13 @@ class BorrowingPage {
   constructor(page) {
     this.page = page;
 
-    // borrow.php — มีแค่ form ยืม
+    // borrow.php — Member Code input + Select Book dropdown + Borrow Book button
     this.memberInput = page.locator('input[placeholder*="member" i], input[name*="member" i]').first();
     this.bookSelect  = page.locator('select').first();
     this.submitBtn   = page.getByRole('button', { name: /Borrow Book/i });
 
-    // return.php — มีตารางรายการทั้งหมด
+    // return.php — ตารางรายการ
     this.borrowingTable = page.locator('table tbody');
-    this.overdueRows    = page.locator('table tbody tr').filter({ hasText: /Overdue/i });
-    this.borrowedRows   = page.locator('table tbody tr').filter({ hasText: /Borrowed/i });
   }
 
   async gotoBorrowForm() {
@@ -22,11 +20,6 @@ class BorrowingPage {
   async gotoReturnList() {
     await this.page.goto('http://localhost:8080/return.php');
     await this.page.waitForLoadState('networkidle', { timeout: 15000 });
-  }
-
-  // เพื่อ backward compat กับโค้ดเดิม
-  async goto() {
-    await this.gotoBorrowForm();
   }
 
   async borrowBook(memberCode, bookIndex = 1) {
