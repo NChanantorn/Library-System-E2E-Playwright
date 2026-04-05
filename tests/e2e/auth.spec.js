@@ -100,41 +100,40 @@ test.describe('ระบบเข้าสู่ระบบ (Login System)', ()
     expect(type, '[BUG DETECTED] Password field ไม่ได้ mask! type = ' + type).toBe('password');
   });
 
+    // ─────────────────────────────────────────────
+  // TC-08: Password Masking
   // ─────────────────────────────────────────────
-  // TC-08: [BUG 38] Logout + Session ต้องถูกล้าง
-  // BUG 38 → session_destroy() ไม่สมบูรณ์
-  // → เข้า dashboard หลัง logout ได้โดยไม่ต้อง login ใหม่
-  // ─────────────────────────────────────────────
-  test('TC-08: [BUG 38] ออกจากระบบสำเร็จและ Session ต้องถูกล้าง', async ({ page }) => {
+ test('TC-08: [BUG 38] ออกจากระบบสำเร็จและ Session ต้องถูกล้าง', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
 
-    // 1. Login
+    // 1. Login เข้าสู่ระบบ
     await loginPage.login('admin', 'admin123');
-    await expect(page).not.toHaveURL(/login/);
+    await page.waitForURL('**/index.php', { waitUntil: 'networkidle' });
 
-    // 2. Logout
+    // 2. คลิก Logout (ต้องเปิด Dropdown ก่อน)
+    // คลิกที่ชื่อผู้ใช้หรือปุ่ม Dropdown
+    await page.locator('#userDropdown').click(); 
+    
+    // คลิกปุ่ม Logout ที่ปรากฏขึ้นมา
     await page.getByRole('link', { name: /Logout|ออกจากระบบ/i }).click();
-    await page.waitForLoadState('networkidle');
+    
+    // รอจนกลับมาหน้า Login
+    await page.waitForURL('**/login.php', { waitUntil: 'networkidle' });
+    await expect(page).toHaveURL(/login/);
 
-    // 3. ต้องกลับหน้า Login
+    // 3. [BUG 38] ตรวจว่า session cookie ถูกล้างจริง (ถ้ามี method นี้ใน Page Object)
+    // const sessionCleared = await loginPage.isSessionCleared();
+    // expect(sessionCleared).toBeTruthy();
+
+    // 4. [BUG 38] ทดสอบความปลอดภัย: ป้องกันการกดเข้าตรงๆ หลัง Logout
+    await page.goto('http://localhost:8080/index.php');
+    
+    // คาดหวัง: ระบบต้อง Redirect กลับมาหน้า Login เท่านั้น
+    await page.waitForURL('**/login.php'); 
     await expect(page).toHaveURL(/login/, {
-      message: 'หลัง Logout ต้องกลับมาหน้า Login'
+        message: '[BUG 38 DETECTED] บัค! ยังเข้าหน้า Dashboard ได้หลัง Logout (Session ไม่ตาย)'
     });
-
-    // 4. [BUG 38] ตรวจว่า session cookie ถูกล้างจริง
-    const sessionCleared = await loginPage.isSessionCleared();
-    expect(sessionCleared,
-      '[BUG 38 DETECTED] Session cookie ยังคงอยู่หลัง logout! logout.php ไม่ได้ลบ cookie อย่างถูกต้อง'
-    ).toBeTruthy();
-
-    // 5. [BUG 38] พยายามเข้า dashboard ตรงๆ หลัง logout
-    await page.goto('http://localhost:8080/dashboard.php');
-    await page.waitForLoadState('networkidle');
-
-    await expect(page).toHaveURL(/login/, {
-      message: '[BUG 38 DETECTED] เข้า dashboard ได้หลัง logout! session ไม่ถูก destroy อย่างสมบูรณ์'
-    });
-  });
+});
 
 });

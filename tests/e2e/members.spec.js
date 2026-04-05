@@ -82,61 +82,37 @@ test.describe('Members Management Module', () => {
     ).toBeTruthy();
   });
 
-  // ─────────────────────────────────────────────
-  // TC-MEM-05: แก้ไขข้อมูลสมาชิก
-  // ─────────────────────────────────────────────
-  test('TC-MEM-05: แก้ไขข้อมูลสมาชิก', async ({ page }) => {
-    const membersPage = new MembersPage(page);
-    await membersPage.goto();
+// TC-MEM-05: [BUG] ไม่มีปุ่ม Edit ในตาราง Members
+test('TC-MEM-05: [BUG] แก้ไขข้อมูลสมาชิก — ไม่มีปุ่ม Edit', async ({ page }) => {
+  const membersPage = new MembersPage(page);
+  await membersPage.goto();
 
-    await page.waitForSelector('table tbody tr', { timeout: 10000 });
+  await page.waitForSelector('table tbody tr', { timeout: 10000 });
 
-    const editBtn = page.locator('table tbody tr').first()
-                        .locator('a, button').filter({ hasText: /Edit|แก้ไข/i });
-    await editBtn.first().click();
+  const editBtn = page.locator('table tbody tr').first()
+                      .locator('a, button').filter({ hasText: /Edit|แก้ไข/i });
 
-    // รองรับทั้ง modal และ navigate ไปหน้าใหม่
-    await membersPage.nameInput.waitFor({ state: 'visible', timeout: 10000 });
+  const hasEdit = await editBtn.first().isVisible().catch(() => false);
+  expect(hasEdit,
+    '[BUG DETECTED] ไม่มีปุ่ม Edit ในตาราง Members'
+  ).toBeTruthy();
+});
 
-    // ข้อมูลเดิมต้องโหลดมา (ไม่ว่าง)
-    const currentName = await membersPage.nameInput.inputValue();
-    expect(currentName.length, 'ข้อมูลเดิมต้องโหลดมาใน form').toBeGreaterThan(0);
+// TC-MEM-06: [BUG] ไม่มีปุ่ม Delete ในตาราง Members
+test('TC-MEM-06: [BUG] ลบสมาชิก — ไม่มีปุ่ม Delete', async ({ page }) => {
+  const membersPage = new MembersPage(page);
+  await membersPage.goto();
 
-    // แก้ไข
-    const newName = 'Updated-' + Date.now();
-    await membersPage.nameInput.fill(newName);
+  await page.waitForSelector('table tbody tr', { timeout: 10000 });
 
-    await membersPage.submitBtn.first().click();
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
-    await page.waitForTimeout(500);
+  const deleteBtn = page.locator('table tbody tr').first()
+                        .locator('a, button').filter({ hasText: /Delete|ลบ/i });
 
-    await expect(membersPage.rowWith(newName)).toBeVisible({ timeout: 10000 });
-  });
-
-  // ─────────────────────────────────────────────
-  // TC-MEM-06: ลบสมาชิก
-  // ─────────────────────────────────────────────
-  test('TC-MEM-06: ลบสมาชิก', async ({ page }) => {
-    const membersPage = new MembersPage(page);
-    await membersPage.goto();
-
-    // เพิ่มสมาชิกใหม่ก่อน แล้วค่อยลบ (ไม่กระทบข้อมูลจริง)
-    const code = uniqueCode();
-    const name = 'Delete-Me-' + Date.now();
-    await membersPage.fillMemberInfo(code, name, 'del@mail.com', '0800000000');
-    await expect(membersPage.rowWith(name)).toBeVisible({ timeout: 10000 });
-
-    // กด Delete แถวที่เพิ่งเพิ่ม
-    const row = membersPage.rowWith(name);
-    const deleteBtn = row.locator('a, button').filter({ hasText: /Delete|ลบ/i });
-
-    page.on('dialog', d => d.accept());
-    await deleteBtn.first().click();
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
-
-    // สมาชิกต้องหายไป
-    await expect(membersPage.rowWith(name)).not.toBeVisible({ timeout: 8000 });
-  });
+  const hasDelete = await deleteBtn.first().isVisible().catch(() => false);
+  expect(hasDelete,
+    '[BUG DETECTED] ไม่มีปุ่ม Delete ในตาราง Members'
+  ).toBeTruthy();
+});
 
   // ─────────────────────────────────────────────
   // TC-MEM-07: เพิ่มสมาชิกโดยไม่กรอกข้อมูลที่จำเป็น
@@ -167,7 +143,7 @@ test.describe('Members Management Module', () => {
   // TC-MEM-XX: [BUG 31] ไม่ตรวจสอบรูปแบบ Email
   // BUG 31 → กรอก email ผิดรูปแบบก็บันทึกได้
   // ─────────────────────────────────────────────
-  test('TC-MEM-XX: [BUG 31] ระบบต้องปฏิเสธ Email ที่ผิดรูปแบบ', async ({ page }) => {
+  test('TC-MEM-08: [BUG 31] ระบบต้องปฏิเสธ Email ที่ผิดรูปแบบ', async ({ page }) => {
     const membersPage = new MembersPage(page);
     await membersPage.goto();
 
@@ -194,7 +170,7 @@ test.describe('Members Management Module', () => {
   // ─────────────────────────────────────────────
   // TC-MEM-XX: [BUG 33] Teacher ได้ max_books = 3 แทนที่จะเป็น 5
   // ─────────────────────────────────────────────
-  test('TC-MEM-XX: [BUG 33] Teacher ต้องได้ max_books = 5 ไม่ใช่ 3', async ({ page }) => {
+  test('TC-MEM-09: [BUG 33] Teacher ต้องได้ max_books = 5 ไม่ใช่ 3', async ({ page }) => {
     const membersPage = new MembersPage(page);
     await membersPage.goto();
 

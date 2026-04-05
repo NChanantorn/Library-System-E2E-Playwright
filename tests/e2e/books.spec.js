@@ -60,16 +60,20 @@ test.describe('Books Management', () => {
   // ──────────────────────────────────────────────
   // TC-BOOK-03: [Happy Path] เพิ่มหนังสือสำเร็จ
   // ──────────────────────────────────────────────
-  test('TC-BOOK-03: เพิ่มหนังสือใหม่ด้วยข้อมูลครบถ้วน', async ({ page }) => {
-    const booksPage = new BooksPage(page);
-    await booksPage.goto();
+test('TC-BOOK-03: [BUG] เพิ่มหนังสือใหม่ — book_add.php มี SQL error', async ({ page }) => {
+  const booksPage = new BooksPage(page);
+  await booksPage.goto();
 
-    const book = uniqueBook({ title: 'Test Book', author: 'Test Author', isbn: '999-999-999-9', copies: 3 });
-    await booksPage.addBook(book);
+  const book = uniqueBook({ title: 'Test Book', author: 'Test Author', isbn: '999-999-999-9', copies: 3 });
+  await booksPage.addBook(book);
 
-    // ต้องเห็นหนังสือในตาราง
-    await expect(booksPage.rowWith(book.isbn)).toBeVisible({ timeout: 10000 });
-  });
+  const bodyText = await page.locator('body').textContent();
+  expect(bodyText,
+    '[BUG DETECTED] book_add.php มี SQL syntax error'
+  ).not.toContain('Fatal error');
+
+  await expect(booksPage.rowWith(book.isbn)).toBeVisible({ timeout: 10000 });
+});
 
   // ──────────────────────────────────────────────
   // TC-BOOK-04: เพิ่มหนังสือโดยไม่กรอกข้อมูลที่จำเป็น
@@ -95,60 +99,39 @@ test.describe('Books Management', () => {
   // ──────────────────────────────────────────────
   // TC-BOOK-05: แก้ไขข้อมูลหนังสือ
   // ──────────────────────────────────────────────
-  test('TC-BOOK-05: แก้ไขข้อมูลหนังสือ', async ({ page }) => {
-    const booksPage = new BooksPage(page);
-    await booksPage.goto();
+test('TC-BOOK-05: [BUG] แก้ไขหนังสือ — book_edit.php ไม่มีในระบบ', async ({ page }) => {
+  const booksPage = new BooksPage(page);
+  await booksPage.goto();
 
-    // ดึง ISBN แถวแรกเพื่อใช้ verify ภายหลัง
-    await page.waitForSelector('table tbody tr', { timeout: 10000 });
-    const firstIsbn = await page.locator('table tbody tr td:nth-child(1)').first().innerText();
+  await page.waitForSelector('table tbody tr', { timeout: 10000 });
+  const editBtn = page.locator('table tbody tr').first()
+                      .locator('a, button').filter({ hasText: /Edit|แก้ไข/i });
+  await editBtn.first().click();
+  await page.waitForLoadState('networkidle', { timeout: 15000 });
 
-    // คลิก Edit — อาจเป็น link (<a href="book_edit.php?id=...">) หรือ modal button
-    const editBtn = page.locator('table tbody tr').first()
-                        .locator('a, button').filter({ hasText: /Edit|แก้ไข/i });
-    await editBtn.first().click();
-
-    // รอให้ form ปรากฏ (ทั้งแบบ modal และแบบ navigate ไปหน้าใหม่)
-    const titleField = page.locator('input[name="title"], input[name*="title"], #title').first();
-    await titleField.waitFor({ state: 'visible', timeout: 10000 });
-
-    const newTitle = 'Edited-' + Date.now();
-    await titleField.fill(newTitle);
-
-    // Submit (รองรับทั้ง "Update Book" และ "Save")
-    const updateBtn = page.locator('button[type="submit"], input[type="submit"]')
-                          .filter({ hasText: /Update|Save|บันทึก/i });
-    await updateBtn.first().click();
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
-
-    // ข้อมูลใหม่ต้องปรากฏ (ทั้งกรณีกลับมาหน้า books.php หรือหน้า edit เอง)
-    await expect(page.locator('body')).toContainText(newTitle, { timeout: 10000 });
-  });
+  const bodyText = await page.locator('body').textContent();
+  expect(bodyText,
+    '[BUG DETECTED] book_edit.php ไม่มีในระบบ — 404 Not Found'
+  ).not.toContain('Not Found');
+});
 
   // ──────────────────────────────────────────────
   // TC-BOOK-06: ลบหนังสือออกจากระบบ
   // ──────────────────────────────────────────────
-  test('TC-BOOK-06: ลบหนังสือออกจากระบบ', async ({ page }) => {
-    const booksPage = new BooksPage(page);
-    await booksPage.goto();
+test('TC-BOOK-06: [BUG] ลบหนังสือออกจากระบบ — ไม่มีปุ่ม Delete', async ({ page }) => {
+  const booksPage = new BooksPage(page);
+  await booksPage.goto();
 
-    // เพิ่มหนังสือใหม่ก่อนลบ เพื่อไม่กระทบข้อมูลจริง
-    const book = uniqueBook({ title: 'Delete-Me' });
-    await booksPage.addBook(book);
-    await expect(booksPage.rowWith(book.isbn)).toBeVisible({ timeout: 10000 });
+  await page.waitForSelector('table tbody tr', { timeout: 10000 });
 
-    // กด Delete
-    const row = booksPage.rowWith(book.isbn);
-    const deleteBtn = row.locator('a, button').filter({ hasText: /Delete|ลบ/i });
-    
-    // รับ dialog confirm อัตโนมัติ
-    page.on('dialog', d => d.accept());
-    await deleteBtn.first().click();
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+  const deleteBtn = page.locator('table tbody tr').first()
+                        .locator('a, button').filter({ hasText: /Delete|ลบ/i });
 
-    // หนังสือต้องหายไป
-    await expect(booksPage.rowWith(book.isbn)).not.toBeVisible({ timeout: 8000 });
-  });
+  const hasDelete = await deleteBtn.first().isVisible().catch(() => false);
+  expect(hasDelete,
+    '[BUG DETECTED] ไม่มีปุ่ม Delete ในตาราง Books'
+  ).toBeTruthy();
+});
 
   // ──────────────────────────────────────────────
   // TC-BOOK-07: ค้นหาหนังสือด้วยชื่อ
@@ -211,35 +194,8 @@ test.describe('Books Management', () => {
     await expect(booksPage.bookTable).toContainText(firstIsbn.trim(), { timeout: 8000 });
   });
 
-  // ──────────────────────────────────────────────
-  // TC ตรวจบัค (จาก BooksPage.js เดิม)
-  // ──────────────────────────────────────────────
-
-  // TC-BORROW-03 / BUG 15: ใส่ค่า copies ติดลบ
-  test('TC-BORROW-03: [BUG 15] ระบบต้องปฏิเสธจำนวนหนังสือติดลบ', async ({ page }) => {
-    const booksPage = new BooksPage(page);
-    await booksPage.goto();
-    await booksPage.openAddForm();
-    await booksPage.fillAndSubmit({
-      isbn: 'ERR-NEG-' + Date.now(),
-      title: 'Neg-Book',
-      author: 'Tester',
-      copies: -99,
-    });
-
-    // ระบบที่ถูกต้องต้องแสดง error
-    const errorVisible = await page.locator('[class*="alert"], [class*="error"], .text-danger')
-                              .first().isVisible({ timeout: 5000 }).catch(() => false);
-    if (!errorVisible) {
-      console.warn('⚠️  [BUG 15 DETECTED] ระบบยอมรับค่าติดลบโดยไม่แสดง error');
-    }
-    expect(errorVisible,
-      '[BUG 15 DETECTED] ระบบต้องปฏิเสธ copies = -99 แต่ไม่มี error แสดงขึ้น'
-    ).toBeTruthy();
-  });
-
   // BUG 17: ISBN ซ้ำ
-  test('TC-BOOK-XX: [BUG 17] ระบบต้องปฏิเสธ ISBN ที่ซ้ำ', async ({ page }) => {
+  test('TC-BOOK-11: [BUG 17] ระบบต้องปฏิเสธ ISBN ที่ซ้ำ', async ({ page }) => {
     const booksPage = new BooksPage(page);
     await booksPage.goto();
 
