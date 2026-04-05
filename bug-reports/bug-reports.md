@@ -297,7 +297,7 @@ Feature: Members / Add Member - Validation & Error Handling
 - Form ยังอยู่ ให้แก้ไขได้
 - ไม่มี fatal/technical errors
 
-### จริง:
+### ผลจริง:
 
 - ไม่มี front-end validation สำหรับ duplicate check
 - Submit form ได้โดยใช้ Member Code ซ้ำ
@@ -328,7 +328,7 @@ Bug ID: BUG-008
 ชื่อ: Members Management - ไม่มี Action Buttons (Edit, Delete)  
 Severity: High  
 Priority: High  
-TC-ID: TC-MEM-05 
+TC-ID: TC-MEM-05
 Feature: Members / Edit Member Functionality
 
 ### ขั้นตอนการทำซ้ำ:
@@ -345,7 +345,7 @@ Feature: Members / Edit Member Functionality
 - ข้อมูลเดิมโหลดมาใน form
 - บันทึกสำเร็จ
 
-### จริง:
+### ผลจริง:
 
 - Members table ไม่มี Actions column เลย
 - ไม่มี Edit button, Delete button, View button
@@ -391,41 +391,85 @@ Feature: Members / Delete Member Functionality
 - หลังจาก confirm → สมาชิกถูกลบออกจากระบบ
 - สมาชิกหายไปจากตาราง
 
-### จริง:
+### ผลจริง:
 
 - ไม่มี Delete button ในตาราง
-- ไม่มี Actions column เลย (บันทึก: ดู BUG-008)
-- ไม่มีวิธีที่ชัดเจนในการอื่นๆ เพื่อ delete สมาชิก
-- TC-MEM-06 ไม่สามารถทำได้ (Test case ไม่ทำงาน)
 - ไม่มี delete functionality ที่มองเห็น
 
 ### สาเหตุ:
 
 - Delete button ไม่ถูก render (เหมือน BUG-006, BUG-008)
-- May not have underlying delete logic/endpoint either
-- Only Add functionality implemented, Delete is completely missing
-- CRUD operation ขาดแล้ว
+
+### Attachment: BUG-009.png
+
+---
+
+## BUG-010
+
+Bug ID: BUG-010  
+ชื่อ: Borrowing - ไม่มี Borrowing History/Details Page  
+Severity: **CRITICAL**  
+Priority: **CRITICAL**  
+TC-ID: TC-BOR-04  
+Feature: Borrowing / Borrowing History & Details
+
+### ขั้นตอนการทำซ้ำ:
+
+1. Login เข้าระบบด้วย admin/admin123
+2. Go to Borrow page (localhost:8080/borrow.php)
+3. ค้นหาทำการยืมหนังสือ (ดู Borrow page)
+4. หลังจากนั้น ค้นหา "Details" หรือ "View" button เพื่อดูรายละเอียดการยืม
+5. หรือค้นหาหน้า Borrowing History เพื่อดูรายการยืมทั้งหมด
+
+### คาดหวัง:
+
+- มีหน้า Borrowing History / Borrowing Details เข้าถึงได้
+- สามารถดูรายการยืมทั้งหมด (ตาราง history)
+- สามารถดู detail สำหรับแต่ละการยืม:
+  - Member info
+  - Book info
+  - Borrow date, Due date
+  - Return date (ถ้า returned)
+  - Fine amount (ถ้า overdue)
+- ปุ่ม Details/View ในหน้า Borrow หรือ Return สำหรับแต่ละ record
+
+### จริง:
+
+- **ไม่มี Borrowing History page ในระบบ!**
+- Borrow page มีเฉพาะ "Borrow Form" เพื่อสร้างการยืมใหม่
+- ไม่มี Details button/link เพื่อดูรายละเอียด
+- ไม่มีวิธีเพื่อดูรายการยืมที่เก่าแล้ว
+- ไม่มี history tracking page
+- ไม่สามารถ view borrowing records ได้ (TC-BOR-04 fail)
+
+### สาเหตุ:
+
+- Borrowing History/Details page ไม่ถูกสร้าง
+- No view/detail template for borrowing records
+- Missing feature entirely
+- Similar to BUG-005 (Missing Edit page)
+- Incomplete feature implementation
 
 ### ผลกระทบ:
 
-- **Functionality:** ไม่สามารถลบสมาชิกออกจากระบบได้
-- **Data Management:** ไม่สามารถ manage/cleanup member data
-- **Workaround:** ต้อง delete จาก database console ด้วยตนเอง
-- **Completeness:** CRUD incomplete - missing Delete operation
-- **Severity:** High - Core functionality fail
-- **Test Case Failure:** TC-MEM-06 ไม่สามารถ execute
+- **Functionality:** ไม่สามารถดูรายการยืมที่เก่าแล้ว
+- **Data Tracking:** ไม่มีวิธีติดตามการยืม-คืน
+- **Fine Management:** ไม่สามารถดู/verify fine amount
+- **Business Logic:** ขาดการจัดการ borrowing records
+- **Severity:** CRITICAL - Core feature missing
+- **Test Case:** TC-BOR-04 ไม่สามารถ execute
 
-### Related Issues:
+### Pattern:
 
-- BUG-006: Missing Delete in Books
-- BUG-008: Missing Actions in Members
-- Pattern: Delete functionality incomplete across modules
+- BUG-005: Missing Book Edit page
+- BUG-010: Missing Borrowing History page
+- Pattern: Major feature pages missing from required modules
 
 ### Attachment: 
-- BUG-009-members-no-delete-button.png
+- BUG-010-no-borrowing-history-page.png
 
 ### Status: 
-New (ยืนยันแล้ว)
+CRITICAL (ยืนยันแล้ว)
 
 ---
 
@@ -439,17 +483,18 @@ New (ยืนยันแล้ว)
 **BUG-006:** Missing Delete Button in Books Table - TC-BOOK-06  
 **BUG-007:** No Duplicate Check + Fatal Error on Member Code - TC-MEM-04  
 **BUG-008:** Missing Action Buttons in Members Table - TC-MEM-05  
-**BUG-009:** Missing Delete Member Functionality - TC-MEM-06
+**BUG-009:** Missing Delete Member Functionality - TC-MEM-06  
+**BUG-010:** 🔴 Missing Borrowing History/Details Page - TC-BOR-04
 
 ---
 
 ## สถานะ
 
-**Total Bugs Found:** 9  
+**Total Bugs Found:** 10  
 **Target:** 20-30 bugs  
-**Remaining:** 11-21 bugs ต้องหา
+**Remaining:** 10-20 bugs ต้องหา
 
-**CRITICAL Bugs:** 2 (SQL Injection, Missing Edit Page)  
+**CRITICAL Bugs:** 3 (SQL Injection, Missing Edit Page, Missing History Page)  
 **HIGH Bugs:** 7 (PHP Errors x2, Dashboard Logic, Missing Delete x2, Duplicate Check, Missing Edit)
 
 ---
