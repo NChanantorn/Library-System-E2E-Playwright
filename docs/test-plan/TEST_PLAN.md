@@ -38,7 +38,7 @@
 ### แนวทางการทดสอบ
 - **ประเภท**: E2E Functional Testing
 - **Framework**: Playwright + JavaScript
-- **ความครอบคลุม**: 56 Test Cases
+- **ความครอบคลุม**: 63 Test Cases
 - **ระดับการทำให้อัตโนมัติ**: ทั้งหมด (ยกเว้นการทดสอบด้วยตัวเองบางส่วน)
 
 ---
@@ -140,7 +140,7 @@
 | ระยะ | ระยะเวลา | งาน |
 |------|---------|------|
 | **การวางแผนและการตั้งค่า** | สัปดาห์ที่ 1 | การเตรียมสภาพแวดล้อม, ติดตั้งเครื่องมือ, เตรียมข้อมูลการทดสอบ |
-| **การพัฒนา Test Cases** | สัปดาห์ที่ 2-3 | เขียน 56 Test Cases, จัดระเบียบตามเส้นทางผู้ใช้ |
+| **การพัฒนา Test Cases** | สัปดาห์ที่ 2-3 | เขียน 63 Test Cases, จัดระเบียบตามเส้นทางผู้ใช้ |
 | **การทดสอบด้วยตัวเอง (Manual)** | สัปดาห์ที่ 3 | ทดสอบเส้นทางสำคัญด้วยตัวเองเพื่อการตรวจสอบ |
 | **การนำไปใช้อัตโนมัติ** | สัปดาห์ที่ 4-5 | สร้าง Automated Test Scripts ใช้ Playwright |
 | **การทดสอบการถดถอย** | สัปดาห์ที่ 5 | เรียกใช้ชุดทดสอบทั้งหมด, ตรวจสอบการแก้ไข |
@@ -176,25 +176,25 @@
 ## 7. สรุป Test Cases
 
 ### การจัดระเบียบ Test Cases
-- **ทั้งหมด**: 56 Test Cases
-- **เส้นทางสำคัญ (Critical & E2E)**: 15 Cases
+- **ทั้งหมด**: 63 Test Cases
+- **เส้นทางสำคัญ (Critical & E2E)**: 16 Cases
 - **Happy Path**: 25 Cases
-- **Edge Cases & Error Scenarios**: 16 Cases
+- **Edge Cases & Error Scenarios**: 22 Cases
 
 ### Test Cases ตามโมดูล
 
 | โมดูล | Test Cases | ลำดับความสำคัญ |
 |------|-----------|-------------|
 | Authentication | 10 | Critical |
-| Dashboard | 3 | High |
-| Books Management | 11 | Critical |
+| Dashboard | 6 | High |
+| Books Management | 12 | Critical |
 | Members Management | 9 | Critical |
-| Borrowing (ยืม-คืน) | 7 | Critical |
+| Borrowing (ยืม-คืน) | 10 | Critical |
 | Reports (รายงาน) | 5 | High |
 | Cross-Browser | 3 | High/Medium |
 | Visual / Responsive | 3 | Medium/Low |
 | User Journey (E2E) | 5 | Critical |
-| **รวม** | **56** | - |
+| **รวม** | **63** | - |
 
 ---
 
@@ -209,7 +209,7 @@
 - Build ปรับใช้ไปยังสภาพแวดล้อมการทดสอบ
 
 ### เกณฑ์ Exit (เสร็จสิ้นการทดสอบเมื่อ)
-- ทดสอบทั้ง 56 Test Cases ทั้งหมด
+- ทดสอบทั้ง 63 Test Cases ทั้งหมด
 - อัตราความสำเร็จอย่างน้อย 95%
 - แก้ไขปัญหาที่สำคัญ
 - บันทึกปัญหาลำดับความสำคัญ
@@ -297,11 +297,11 @@
 วันที่: [วันที่]
 ผู้ทดสอบ: [ชื่อ]
 เวอร์ชั่น Build: [เวอร์ชั่น]
-Executed: [56]
+Executed: [63]
 ผ่าน: [X]
 ล้มเหลว: [Y]
 ข้ามไป: [Z]
-Pass Rate: [X/56]
+Pass Rate: [X/63]
 ปัญหาที่พบ: [จำนวน]
 ```
 
