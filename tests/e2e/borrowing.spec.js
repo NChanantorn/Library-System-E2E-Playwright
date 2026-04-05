@@ -235,7 +235,7 @@ test.describe('Borrowing Management Module', () => {
   // ─────────────────────────────────────────────
   // EDGE: ข้อมูลคงที่หลัง reload
   // ─────────────────────────────────────────────
-  test('EDGE-CASE-BOR-02: ข้อมูลคงที่หลัง reload', async ({ page }) => {
+  test('TC-BOR-08: ข้อมูลคงที่หลัง reload', async ({ page }) => {
     const bp = new BorrowingPage(page);
     await bp.gotoReturnList();
     const before = await bp.getRecordCount();
