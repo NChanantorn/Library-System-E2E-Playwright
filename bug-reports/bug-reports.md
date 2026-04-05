@@ -461,9 +461,9 @@ Feature: Borrowing / Borrowing History & Details
 ## BUG-011
 
 Bug ID: BUG-011  
-ชื่อ: Due Date คำนวณไม่ถูกต้องสำหรับผู้ยืมประเภท Teacher  
+ชื่อ: Due Date คำนวณไม่ถูกต้องสำหรับประเภทผู้ยืม
 Severity: High  
-Priority: High  
+Priority: Medium  
 TC-ID: TC-BOR-06  
 Feature: Borrowing / Due Date Calculation
 
@@ -492,22 +492,78 @@ Feature: Borrowing / Due Date Calculation
 
 - Logic การคำนวณ Due Date ไม่แยกตาม member type
 - อาจมี default 14 วัน สำหรับทุกประเภท
-- Missing business rule branch for Teacher / Public
 
-### ผลกระทบ:
-
-- **Functionality:** Due Date ไม่สอดคล้องกับกฎการยืม
-- **Business Rules:** Teacher ได้รับช่วงเวลายืมผิด
-- **User Trust:** ผู้ใช้สับสนเมื่อระบบไม่ตาม policy
-- **Severity:** High - คำนวณวันคืนผิดสำหรับกลุ่มผู้ใช้หนึ่ง
-
-### Attachment: 
-- BUG-011-due-date-wrong-teacher.png
-
-### Status: 
-New (ยืนยันแล้ว)
+### Attachment: BUG-011.png
 
 ---
+
+Bug ID: BUG-012
+ชื่อ: Book Management - ปุ่ม View และ Edit ลิงก์ไปยังหน้าที่ไม่มีอยู่จริง (404 Not Found)
+Severity: High
+Priority: High
+TC-ID: TC-UJ-03
+Feature: Books / Admin Table Actions
+
+### ขั้นตอนการทำซ้ำ:
+
+1. Login เข้าสู่ระบบด้วยบัญชี admin (admin/admin123)
+2. ไปที่หน้าจัดการหนังสือ (localhost:8080/books.php)
+3. สังเกตแถวข้อมูลหนังสือในตาราง
+4. พยายามคลิกปุ่ม **"View"** (สีเทา) หรือ **"Edit"** (สีเหลือง)
+
+### คาดหวัง:
+
+- เมื่อคลิกปุ่ม View ระบบควรเปิดหน้า `book_view.php?id=...`
+- เมื่อคลิกปุ่ม Edit ระบบควรเปิดหน้า `book_edit.php?id=...`
+
+### ผลจริง:
+
+- **มีปุ่ม View และ Edit ปรากฏอยู่ในหน้าตาราง**
+- เมื่อคลิกที่ปุ่ม ระบบพยายามเปิดหน้า `book_view.php` หรือ `book_edit.php` แต่ขึ้นข้อความผิดพลาดจาก Server:
+  > **Not Found**  
+  > **The requested URL was not found on this server.**  
+  > _Apache/2.4.65 (Debian) Server at localhost Port 8080_
+- ไม่สามารถเปิดหน้าดูรายละเอียดหรือหน้าแก้ไขได้ตามเส้นทาง User Journey
+
+### สาเหตุ:
+
+- การสร้าง HTML ในส่วนของตาราง (Loop PHP) ใส่ค่าใน `href` ของแท็ก `<a>` ไม่ถูกต้อง หรือลืมใส่ Parameter ID
+- สอดคล้องกับ BUG-005 ที่หน้า Edit มีปัญหา และ BUG-008 ที่ UI ในตารางทำงานไม่สมบูรณ์
+
+### Attachment: BUG-012.png
+
+---
+
+## BUG-013
+
+Bug ID: BUG-013
+ชื่อ: Book Management - ไม่มีปุ่ม 'Edit' และ 'Delete' แสดงในหน้า UI (Missing Action Buttons)
+Severity: Critical
+Priority: High
+TC-ID: TC-UJ-03
+Feature: Books / CRUD Journey
+
+### ขั้นตอนการทำซ้ำ:
+
+1. Login เข้าสู่ระบบด้วย admin
+2. ทำการเพิ่มหนังสือใหม่ (Success)
+3. ค้นหาหนังสือที่เพิ่งเพิ่มในตาราง
+4. ตรวจสอบหาปุ่ม "แก้ไข" และ "ลบ" สำหรับหนังสือเล่มนั้นในตาราง
+
+### คาดหวัง:
+
+- หน้าจอจัดการหนังสือต้องมีปุ่ม **Edit** และ **Delete** แสดงขึ้นมาเพื่อให้ Admin สามารถจัดการข้อมูลหนังสือได้ครบวงจร (CRUD)
+
+### ผลจริง:
+
+- ไม่มีปุ่ม 'Edit' และ 'Delete' ปรากฏในหน้า UI ของตารางจัดการหนังสือ
+- ทำให้ User Journey ในขั้นตอนที่ 3 (แก้ไขหนังสือ) และ 4 (ลบหนังสือ) ล้มเหลวเนื่องจากไม่มีเครื่องมือสั่งการ
+
+### สาเหตุ:
+
+- การเขียนโค้ดแสดงผลตารางในไฟล์ `books.php` ไม่ได้ถูกออกแบบให้ Render ปุ่ม Action สำหรับการแก้ไขและลบข้อมูล (สอดคล้องกับปัญหาใน BUG-006 และ BUG-008)
+
+### Attachment: BUG-013.png
 
 ## บันทึก:
 
@@ -522,16 +578,18 @@ New (ยืนยันแล้ว)
 **BUG-009:** Missing Delete Member Functionality - TC-MEM-06  
 **BUG-010:** 🔴 Missing Borrowing History/Details Page - TC-BOR-04  
 **BUG-011:** Due Date Calculation Wrong for Teacher - TC-BOR-06
+**BUG-012:** 🔴 404 Not Found on View/Edit Buttons - TC-UJ-03
+**BUG-013:** 🔴 Missing Edit/Delete Buttons in UI - TC-UJ-03
 
 ---
 
 ## สถานะ
 
-**Total Bugs Found:** 11  
+**Total Bugs Found:** 13
 **Target:** 20-30 bugs  
-**Remaining:** 9-19 bugs ต้องหา
+**Remaining:** 7-17 bugs ต้องหา
 
-**CRITICAL Bugs:** 3 (SQL Injection, Missing Edit Page, Missing History Page)  
+**CRITICAL Bugs:** 5 (SQL Injection, Missing Edit Page, Missing History Page, Missing Edit/Delete Buttons, 404 on Table Actions)
 **HIGH Bugs:** 8 (PHP Errors x2, Dashboard Logic, Missing Delete x2, Duplicate Check, Missing Edit, Due Date Calculation)
 
 ---
