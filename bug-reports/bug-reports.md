@@ -328,7 +328,7 @@ Bug ID: BUG-008
 ชื่อ: Members Management - ไม่มี Action Buttons (Edit, Delete)  
 Severity: High  
 Priority: High  
-TC-ID: TC-MEM-05  
+TC-ID: TC-MEM-05 
 Feature: Members / Edit Member Functionality
 
 ### ขั้นตอนการทำซ้ำ:
@@ -340,17 +340,14 @@ Feature: Members / Edit Member Functionality
 
 ### คาดหวัง:
 
-- Members table ควรมี Actions column ที่แสดง buttons:
-  - **View** button (สีเทา)
-  - **Edit** button (สีเหลือง)
-  - **Delete** button (สีแดง) OPT
-- สำหรับแต่ละ row สามารถคลิก Edit เพื่อแก้ไขข้อมูลสมาชิก
+- สามารถคลิก Edit เพื่อแก้ไขข้อมูลสมาชิก
 - Edit functionality พร้อมใช้งาน
+- ข้อมูลเดิมโหลดมาใน form
+- บันทึกสำเร็จ
 
 ### จริง:
 
-- **Members table ไม่มี Actions column เลย!**
-- ตาราง แสดงเฉพาะ: Member Code, Full Name, Email, Phone, Type, Max Books, Status, Registration
+- Members table ไม่มี Actions column เลย
 - ไม่มี Edit button, Delete button, View button
 - ไม่สามารถแก้ไขข้อมูลสมาชิกได้จากตาราง
 - ผู้ใช้ไม่รู้ว่าจะทำอย่างไรเพื่อ edit
@@ -362,20 +359,70 @@ Feature: Members / Edit Member Functionality
 - Incomplete table implementation
 - Similar issue to BUG-006 (Missing Delete in Books)
 
-### ผลกระทบ:
-
-- **Functionality:** ไม่สามารถแก้ไขข้อมูลสมาชิกจากตาราง
-- **Workaround:** ไม่มี alternative way ที่ชัดเจน
-- **UX:** ผู้ใช้ confused ว่าจะ edit member ยังไง
-- **Completeness:** CRUD ขาดครึ่ง (มี Add เท่านั้น)
-- **Severity:** High - Edit functionality ขาดแล้ว
-
 ### Pattern Error:
 
 นี่เป็นปัญหาเดียวกับ BUG-006 - Action buttons incomplete ในทั้ง Books และ Members modules
 
+### Attachment: BUG-008.png
+
+---
+
+## BUG-009
+
+Bug ID: BUG-009  
+ชื่อ: Members Management - ไม่สามารถลบสมาชิก (Delete Member Functionality Missing)  
+Severity: High  
+Priority: High  
+TC-ID: TC-MEM-06  
+Feature: Members / Delete Member Functionality
+
+### ขั้นตอนการทำซ้ำ:
+
+1. Login เข้าระบบด้วย admin/admin123
+2. Go to Members Management page (localhost:8080/members.php)
+3. ค้นหาปุ่ม "Delete" สำหรับสมาชิก
+4. พยายาม delete สมาชิก
+
+### คาดหวัง:
+
+- ตาราง Members มี Actions column พร้อม Delete button
+- สามารถคลิก Delete button สำหรับแต่ละสมาชิก
+- แสดง confirmation dialog: "Do you want to delete this member?"
+- หลังจาก confirm → สมาชิกถูกลบออกจากระบบ
+- สมาชิกหายไปจากตาราง
+
+### จริง:
+
+- ไม่มี Delete button ในตาราง
+- ไม่มี Actions column เลย (บันทึก: ดู BUG-008)
+- ไม่มีวิธีที่ชัดเจนในการอื่นๆ เพื่อ delete สมาชิก
+- TC-MEM-06 ไม่สามารถทำได้ (Test case ไม่ทำงาน)
+- ไม่มี delete functionality ที่มองเห็น
+
+### สาเหตุ:
+
+- Delete button ไม่ถูก render (เหมือน BUG-006, BUG-008)
+- May not have underlying delete logic/endpoint either
+- Only Add functionality implemented, Delete is completely missing
+- CRUD operation ขาดแล้ว
+
+### ผลกระทบ:
+
+- **Functionality:** ไม่สามารถลบสมาชิกออกจากระบบได้
+- **Data Management:** ไม่สามารถ manage/cleanup member data
+- **Workaround:** ต้อง delete จาก database console ด้วยตนเอง
+- **Completeness:** CRUD incomplete - missing Delete operation
+- **Severity:** High - Core functionality fail
+- **Test Case Failure:** TC-MEM-06 ไม่สามารถ execute
+
+### Related Issues:
+
+- BUG-006: Missing Delete in Books
+- BUG-008: Missing Actions in Members
+- Pattern: Delete functionality incomplete across modules
+
 ### Attachment: 
-- BUG-008-members-no-action-buttons.png
+- BUG-009-members-no-delete-button.png
 
 ### Status: 
 New (ยืนยันแล้ว)
@@ -391,18 +438,19 @@ New (ยืนยันแล้ว)
 **BUG-005:** 🔴 Edit Book page 404 Not Found - TC-BOOK-05  
 **BUG-006:** Missing Delete Button in Books Table - TC-BOOK-06  
 **BUG-007:** No Duplicate Check + Fatal Error on Member Code - TC-MEM-04  
-**BUG-008:** Missing Action Buttons in Members Table - TC-MEM-05
+**BUG-008:** Missing Action Buttons in Members Table - TC-MEM-05  
+**BUG-009:** Missing Delete Member Functionality - TC-MEM-06
 
 ---
 
 ## สถานะ
 
-**Total Bugs Found:** 8  
+**Total Bugs Found:** 9  
 **Target:** 20-30 bugs  
-**Remaining:** 12-22 bugs ต้องหา
+**Remaining:** 11-21 bugs ต้องหา
 
 **CRITICAL Bugs:** 2 (SQL Injection, Missing Edit Page)  
-**HIGH Bugs:** 6 (PHP Errors x2, Dashboard Logic, Missing Delete/Edit x2, Duplicate Check)
+**HIGH Bugs:** 7 (PHP Errors x2, Dashboard Logic, Missing Delete x2, Duplicate Check, Missing Edit)
 
 ---
 
