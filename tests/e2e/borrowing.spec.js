@@ -225,7 +225,7 @@ test.describe('Borrowing Management Module', () => {
   // ─────────────────────────────────────────────
   // EDGE: Performance
   // ─────────────────────────────────────────────
-  test('EDGE-CASE-BOR-01: หน้าโหลดภายใน 15 วินาที', async ({ page }) => {
+  test('TC-BOR-08: หน้าโหลดภายใน 15 วินาที', async ({ page }) => {
     const bp = new BorrowingPage(page);
     const start = Date.now();
     await bp.gotoBorrowForm();
@@ -235,7 +235,7 @@ test.describe('Borrowing Management Module', () => {
   // ─────────────────────────────────────────────
   // EDGE: ข้อมูลคงที่หลัง reload
   // ─────────────────────────────────────────────
-  test('TC-BOR-08: ข้อมูลคงที่หลัง reload', async ({ page }) => {
+  test('TC-BOR-09: ข้อมูลคงที่หลัง reload', async ({ page }) => {
     const bp = new BorrowingPage(page);
     await bp.gotoReturnList();
     const before = await bp.getRecordCount();
@@ -247,7 +247,7 @@ test.describe('Borrowing Management Module', () => {
   // ─────────────────────────────────────────────
   // EDGE: Date format ถูกต้อง
   // ─────────────────────────────────────────────
-  test('EDGE-CASE-BOR-10: รูปแบบวันที่ถูกต้อง', async ({ page }) => {
+  test('TC-BOR-10: รูปแบบวันที่ถูกต้อง', async ({ page }) => {
     const bp = new BorrowingPage(page);
     await bp.gotoReturnList();
 
